@@ -37,7 +37,7 @@
                         Website yang membantu anda mencari makanan di kantin Univeristas Pertamina.
                     </h2>
                     <div class="space-y-4">
-                        <a href="#" class="block bg-white text-[#7C3AED] px-12 py-3 rounded-full text-xl font-medium hover:bg-gray-100 transition duration-300">
+                        <a href="{{ route('login') }}" class="block bg-white text-[#7C3AED] px-12 py-3 rounded-full text-xl font-medium hover:bg-gray-100 transition duration-300">
                             Masuk
                         </a>
                         <a href="{{ route('sign-up') }}" class="block text-white hover:underline">
