@@ -19,7 +19,7 @@
                         <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood Logo" class="w-full">
                     </div>
                     <div>
-                        <a href="#" class="bg-[#7C3AED] text-white px-10 py-2.5 rounded-full text-lg font-medium hover:bg-[#6D28D9] transition duration-300">
+                        <a href="{{ route('login') }}" class="bg-[#7C3AED] text-white px-10 py-2.5 rounded-full text-lg font-medium hover:bg-[#6D28D9] transition duration-300">
                             Masuk/Daftar
                         </a>
                     </div>
