@@ -40,7 +40,7 @@
                         <a href="#" class="block bg-white text-[#7C3AED] px-12 py-3 rounded-full text-xl font-medium hover:bg-gray-100 transition duration-300">
                             Masuk
                         </a>
-                        <a href="#" class="block text-white hover:underline">
+                        <a href="{{ route('sign-up') }}" class="block text-white hover:underline">
                             Belum ada Akun? Daftarlah
                         </a>
                     </div>
