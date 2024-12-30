@@ -19,16 +19,13 @@ class LoginController extends Controller
             'password' => 'required',    
         ]);
 
-        // Ambil data input
         $credentials = $request->only('email', 'password');
 
-        // Autentikasi
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate(); 
             return redirect()->route('#')->with('success', 'Login berhasil!');
         }
 
-        // Jika gagal login
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->withInput();
