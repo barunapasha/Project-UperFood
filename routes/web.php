@@ -4,13 +4,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SignUpController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\HomeController;
 
 Route::get('/login', [LoginController::class, 'showLoginPage'])->name('login');
 Route::post('/login', [LoginController::class, 'processLogin'])->name('login.process');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('/', [PageController::class, 'landing'])->name('landing');
-
 Route::get('/information', [PageController::class, 'information'])->name('information');
 
 Route::get('/sign-up', [SignUpController::class, 'show'])->name('sign-up');
 Route::post('/sign-up', [SignUpController::class, 'store'])->name('sign-up.store');
+
+Route::get('/home', [HomeController::class, 'index'])
+    ->name('home')
+    ->middleware('auth');

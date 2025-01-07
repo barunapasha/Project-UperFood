@@ -15,4 +15,9 @@ class PageController extends Controller
     {
         return view('information');
     }
+
+    public function main()
+    {
+        return view('main');
+    }
 }
