@@ -6,163 +6,181 @@ use App\Models\Warung;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-   public function dashboard()
-   {
-       $warungs = Warung::all();
-       return view('admin.dashboard', compact('warungs'));
-   }
+    public function dashboard()
+    {
+        try {
+            $warungs = Warung::all();
+            return view('admin.dashboard', compact('warungs'));
+        } catch (\Exception $e) {
+            Log::error('Error in dashboard: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat mengambil data warung.');
+        }
+    }
 
-   public function warungMenu($id)
-   {
-       $warung = Warung::with(['menuCategories.menuItems'])->findOrFail($id);
-       return view('admin.warung-menu', compact('warung'));
-   }
+    public function storeWarung(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string|max:299',
+                'location' => 'required|string',
+                'image' => 'nullable|string'
+            ]);
 
-   public function createMenuItem(Request $request, $warungId, $categoryId)
-   {
-       $validated = $request->validate([
-           'name' => 'required|string|max:255', 
-           'description' => 'required|string',
-           'price' => 'required|numeric',
-           'is_available' => 'boolean',
-           'image' => 'required|string'
-       ]);
+            Warung::create([
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'location' => $validated['location'],
+                'image' => $validated['image'] ?? 'images/default-warung.jpg', 
+                'rating' => 0,
+                'distance' => '0 km',
+                'slug' => Str::slug($validated['name'])
+            ]);
 
-       $menuCategory = MenuCategory::findOrFail($categoryId);
-       
-       if($menuCategory->warung_id != $warungId) {
-           return back()->with('error', 'Category does not belong to this warung');
-       }
+            return redirect()->back()->with('success', 'Warung berhasil ditambahkan');
+        } catch (\Exception $e) {
+            Log::error('Error in storeWarung: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan warung.');
+        }
+    }
 
-       $menuItem = MenuItem::create([
-           'menu_category_id' => $categoryId,
-           'name' => $validated['name'],
-           'description' => $validated['description'], 
-           'price' => $validated['price'],
-           'is_available' => $validated['is_available'] ?? true,
-           'image' => $validated['image']
-       ]);
+    public function warungMenu($id)
+    {
+        try {
+            $warung = Warung::with(['menuCategories.menuItems'])->findOrFail($id);
+            return view('admin.warung-menu', compact('warung'));
+        } catch (\Exception $e) {
+            Log::error('Error in warungMenu: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat mengambil data menu.');
+        }
+    }
 
-       return back()->with('success', 'Menu item created successfully');
-   }
+    public function createMenuItem(Request $request, $warungId, $categoryId)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|numeric|min:0',
+                'is_available' => 'sometimes|boolean',
+                'image' => 'required|string'
+            ]);
 
-   public function updateMenuItem(Request $request, $id)
-   {
-       $menuItem = MenuItem::findOrFail($id);
-       
-       $validated = $request->validate([
-           'name' => 'required|string|max:255',
-           'description' => 'required|string',
-           'price' => 'required|numeric', 
-           'is_available' => 'boolean',
-           'image' => 'required|string'
-       ]);
+            $menuCategory = MenuCategory::where('warung_id', $warungId)
+                ->where('id', $categoryId)
+                ->firstOrFail();
 
-       $menuItem->update($validated);
+            $menuItem = new MenuItem($validated);
+            $menuItem->menu_category_id = $categoryId;
+            $menuItem->is_available = $request->has('is_available');
+            $menuItem->save();
 
-       return back()->with('success', 'Menu item updated successfully');
-   }
+            return redirect()->back()->with('success', 'Menu berhasil ditambahkan');
+        } catch (\Exception $e) {
+            Log::error('Error in createMenuItem: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menambahkan menu.');
+        }
+    }
 
-   public function deleteMenuItem($id)
-   {
-       $menuItem = MenuItem::findOrFail($id);
-       $menuItem->delete();
+    public function updateMenuItem(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string',
+                'price' => 'required|numeric|min:0',
+                'is_available' => 'sometimes|boolean',
+                'image' => 'required|string'
+            ]);
 
-       return back()->with('success', 'Menu item deleted successfully');
-   }
+            $menuItem = MenuItem::findOrFail($id);
+            $menuItem->fill($validated);
+            $menuItem->is_available = $request->has('is_available');
+            $menuItem->save();
 
-   public function createMenuCategory(Request $request, $warungId)
-   {
-       $validated = $request->validate([
-           'name' => 'required|string|max:255'
-       ]);
+            return redirect()->back()->with('success', 'Menu berhasil diperbarui');
+        } catch (\Exception $e) {
+            Log::error('Error in updateMenuItem: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui menu.');
+        }
+    }
 
-       $warung = Warung::findOrFail($warungId);
+    public function deleteMenuItem($id)
+    {
+        try {
+            $menuItem = MenuItem::findOrFail($id);
+            $menuItem->delete();
 
-       $menuCategory = MenuCategory::create([
-           'warung_id' => $warungId,
-           'name' => $validated['name']
-       ]);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Menu berhasil dihapus']);
+            }
+            return redirect()->back()->with('success', 'Menu berhasil dihapus');
+        } catch (\Exception $e) {
+            Log::error('Error in deleteMenuItem: ' . $e->getMessage());
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'Terjadi kesalahan saat menghapus menu.'], 500);
+            }
+            return back()->with('error', 'Terjadi kesalahan saat menghapus menu.');
+        }
+    }
 
-       return back()->with('success', 'Menu category created successfully');
-   }
+    public function createMenuCategory(Request $request, $warungId)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255'
+            ]);
 
-   public function updateMenuCategory(Request $request, $id)
-   {
-       $menuCategory = MenuCategory::findOrFail($id);
+            MenuCategory::create([
+                'warung_id' => $warungId,
+                'name' => $validated['name']
+            ]);
 
-       $validated = $request->validate([
-           'name' => 'required|string|max:255'
-       ]);
+            return redirect()->back()->with('success', 'Kategori menu berhasil dibuat');
+        } catch (\Exception $e) {
+            Log::error('Error in createMenuCategory: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat membuat kategori menu.');
+        }
+    }
 
-       $menuCategory->update($validated);
+    public function updateMenuCategory(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255'
+            ]);
 
-       return back()->with('success', 'Menu category updated successfully');
-   }
+            $menuCategory = MenuCategory::findOrFail($id);
+            $menuCategory->update($validated);
 
-   public function deleteMenuCategory($id)
-   {
-       $menuCategory = MenuCategory::findOrFail($id);
-       
-       $menuCategory->menuItems()->delete();
-       
-       $menuCategory->delete();
+            return redirect()->back()->with('success', 'Kategori menu berhasil diperbarui');
+        } catch (\Exception $e) {
+            Log::error('Error in updateMenuCategory: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui kategori menu.');
+        }
+    }
 
-       return back()->with('success', 'Menu category and all its items deleted successfully');
-   }
+    public function deleteMenuCategory($id)
+    {
+        try {
+            DB::beginTransaction();
 
-   public function createWarung(Request $request)
-   {
-       $validated = $request->validate([
-           'name' => 'required|string|max:255',
-           'description' => 'required|string',
-           'location' => 'required|string',
-           'image' => 'required|string',
-           'open_hours' => 'required|string', 
-           'distance' => 'required|string',
-           'rating' => 'required|numeric|between:0,5',
-           'slug' => 'required|string|unique:warungs'
-       ]);
+            $menuCategory = MenuCategory::findOrFail($id);
+            $menuCategory->menuItems()->delete();
+            $menuCategory->delete();
 
-       $warung = Warung::create($validated);
-
-       return back()->with('success', 'Warung created successfully');
-   }
-
-   public function updateWarung(Request $request, $id)
-   {
-       $warung = Warung::findOrFail($id);
-
-       $validated = $request->validate([
-           'name' => 'required|string|max:255',
-           'description' => 'required|string',
-           'location' => 'required|string',
-           'image' => 'required|string',
-           'open_hours' => 'required|string',
-           'distance' => 'required|string', 
-           'rating' => 'required|numeric|between:0,5',
-           'slug' => 'required|string|unique:warungs,slug,' . $id
-       ]);
-
-       $warung->update($validated);
-
-       return back()->with('success', 'Warung updated successfully');
-   }
-
-   public function deleteWarung($id)
-   {
-       $warung = Warung::findOrFail($id);
-       
-       foreach($warung->menuCategories as $category) {
-           $category->menuItems()->delete();
-           $category->delete();
-       }
-       
-       $warung->delete();
-
-       return back()->with('success', 'Warung and all its menu data deleted successfully');
-   }
+            DB::commit();
+            return redirect()->back()->with('success', 'Kategori menu berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error in deleteMenuCategory: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menghapus kategori menu.');
+        }
+    }
 }

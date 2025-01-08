@@ -10,12 +10,17 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if (!session('is_admin') || !Auth::check()) {
+        if (!$this->isAdmin()) {
             Auth::logout();
             session()->forget('is_admin');
             return redirect()->route('login')->with('error', 'Unauthorized access.');
         }
 
         return $next($request);
+    }
+
+    protected function isAdmin()
+    {
+        return session('is_admin') && Auth::check();
     }
 }

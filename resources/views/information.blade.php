@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="id" class="h-screen overflow-hidden">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UperFood - Informasi</title>
     @vite('resources/css/app.css')
 </head>
+
 <body class="h-screen overflow-hidden">
     <div class="fixed inset-0 w-full h-full bg-[#7C3AED]">
     </div>
@@ -48,5 +50,123 @@
             </div>
         </main>
     </div>
+    <script>
+        // Fade in animation for page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.8s ease-in';
+                document.body.style.opacity = '2';
+            }, 0);
+        });
+
+        // Smooth hover animations for cards
+        const cards = document.querySelectorAll('.bg-white.rounded-lg');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.transition = 'all 0.3s ease';
+                this.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '';
+            });
+        });
+
+        // Modal animations
+        function openWarungModal() {
+            const modal = document.getElementById('warungModal');
+            modal.classList.remove('hidden');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.transition = 'opacity 0.3s ease-in';
+                modal.style.opacity = '1';
+            }, 0);
+        }
+
+        function closeWarungModal() {
+            const modal = document.getElementById('warungModal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('hidden');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.transition = 'opacity 0.3s ease-in';
+                modal.style.opacity = '1';
+            }, 0);
+        }
+
+        function closeCategoryModal() {
+            const modal = document.getElementById('categoryModal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openAddModal(categoryId) {
+            const modal = document.getElementById('menuModal');
+            modal.classList.remove('hidden');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.style.transition = 'opacity 0.3s ease-in';
+                modal.style.opacity = '1';
+            }, 0);
+            // ... rest of the existing openAddModal logic ...
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('menuModal');
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+            resetForm();
+        }
+
+        // Button hover animations
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+                this.style.transition = 'all 0.2s ease';
+            });
+
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add loading animation for form submissions
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitButton = this.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.innerHTML = '<span class="animate-spin">↻</span> Loading...';
+                    submitButton.disabled = true;
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>
