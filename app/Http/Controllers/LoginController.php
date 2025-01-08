@@ -7,9 +7,13 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    // Admin credentials
+    private const ADMIN_EMAIL = 'admin@uperfood.com';
+    private const ADMIN_PASSWORD = 'admin123';
+
     public function showLoginPage()
     {
-        return view('login'); 
+        return view('login');
     }
 
     public function processLogin(Request $request)
@@ -19,11 +23,20 @@ class LoginController extends Controller
             'password' => 'required',    
         ]);
 
-        $credentials = $request->only('email', 'password');
+        // Check for admin login
+        if ($request->email === self::ADMIN_EMAIL && $request->password === self::ADMIN_PASSWORD) {
+            // Store admin session
+            session(['is_admin' => true]);
+            Auth::loginUsingId(1); // Assuming ID 1 is reserved for admin
+            return redirect('/admin/dashboard');  // Direct URL redirect
+        }
 
+        // Regular user login
+        $credentials = $request->only('email', 'password');
+        
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate(); 
-            return redirect()->route('home')->with('success', 'Login berhasil!');
+            $request->session()->regenerate();
+            return redirect()->route('home');
         }
 
         return back()->withErrors([
@@ -33,10 +46,11 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::logout(); 
-        $request->session()->invalidate(); 
-        $request->session()->regenerateToken(); 
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        session()->forget('is_admin');
 
-        return redirect('/')->with('success', 'Logout berhasil!');
+        return redirect('/');
     }
 }

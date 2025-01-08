@@ -29,6 +29,7 @@ class HomeController extends Controller
 
         $warungKantinAtas = [
             [
+                'id' => 'nasi-padang',
                 'name' => 'Nasi Padang',
                 'description' => 'Rendang, Ayam Bakar, Sayur Nangka',
                 'rating' => 4.7,
@@ -36,6 +37,7 @@ class HomeController extends Controller
                 'image' => 'images/nasi-padang.jpg'
             ],
             [
+                'id' => 'ayam-suir',
                 'name' => 'Ayam Suir',
                 'description' => 'Ayam Suir, Es Teh',
                 'rating' => 5.0,
@@ -43,6 +45,7 @@ class HomeController extends Controller
                 'image' => 'images/ayam-suir.jpg'
             ],
             [
+                'id' => 'warung-indomie',
                 'name' => 'Warung Indomie',
                 'description' => 'Indomie Goreng, Indomie Kuah',
                 'rating' => 4.3,
@@ -53,6 +56,7 @@ class HomeController extends Controller
 
         $warungKantinBawah = [
             [
+                'id' => 'hokkian',
                 'name' => 'Hokkian',
                 'description' => 'Jus, Siomay, Risol',
                 'rating' => 4.7,
@@ -60,6 +64,7 @@ class HomeController extends Controller
                 'image' => 'images/hokkian.jpg'
             ],
             [
+                'id' => 'katsu',
                 'name' => 'Katsu',
                 'description' => 'Chicken Katsu, Steak',
                 'rating' => 5.0,
@@ -67,6 +72,7 @@ class HomeController extends Controller
                 'image' => 'images/katsu.jpg'
             ],
             [
+                'id' => 'soto',
                 'name' => 'Soto',
                 'description' => 'Soto Ayam, Es Jeruk',
                 'rating' => 4.3,
