@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function index()  // Ganti dari dashboard() ke index()
     {
         try {
             $warungs = Warung::all();
@@ -30,23 +31,82 @@ class AdminController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'required|string|max:299',
                 'location' => 'required|string',
-                'image' => 'nullable|string'
             ]);
 
-            Warung::create([
+            $warung = Warung::create([
                 'name' => $validated['name'],
                 'description' => $validated['description'],
                 'location' => $validated['location'],
-                'image' => $validated['image'] ?? 'images/default-warung.jpg', 
+                'image' => 'images/default-warung.jpg',
                 'rating' => 0,
                 'distance' => '0 km',
+                'slug' => Str::slug($validated['name']),
+                'open_hours' => '08:00 - 17:00'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Warung berhasil ditambahkan',
+                'data' => $warung
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in storeWarung: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menambahkan warung: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateWarung(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'required|string|max:299',
+                'location' => 'required|string',
+            ]);
+
+            $warung = Warung::findOrFail($id);
+            $warung->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'location' => $validated['location'],
                 'slug' => Str::slug($validated['name'])
             ]);
 
-            return redirect()->back()->with('success', 'Warung berhasil ditambahkan');
+            return redirect()->back()->with('success', 'Warung berhasil diperbarui');
         } catch (\Exception $e) {
-            Log::error('Error in storeWarung: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menambahkan warung.');
+            Log::error('Error in updateWarung: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat memperbarui warung.');
+        }
+    }
+
+    public function deleteWarung($id)
+    {
+        try {
+            DB::beginTransaction();
+            $warung = Warung::findOrFail($id);
+
+            // Delete related menu items and categories first
+            foreach ($warung->menuCategories as $category) {
+                $category->menuItems()->delete();
+            }
+            $warung->menuCategories()->delete();
+            $warung->delete();
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Warung berhasil dihapus');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error in deleteWarung: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat menghapus warung.');
         }
     }
 
@@ -68,23 +128,38 @@ class AdminController extends Controller
                 'name' => 'required|string|max:255',
                 'description' => 'required|string',
                 'price' => 'required|numeric|min:0',
-                'is_available' => 'sometimes|boolean',
-                'image' => 'required|string'
+                'is_available' => 'required|in:0,1'  // Ubah validasi ini
             ]);
 
             $menuCategory = MenuCategory::where('warung_id', $warungId)
                 ->where('id', $categoryId)
                 ->firstOrFail();
 
-            $menuItem = new MenuItem($validated);
+            $menuItem = new MenuItem([
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'is_available' => (bool)$validated['is_available']  // Konversi ke boolean
+            ]);
+
             $menuItem->menu_category_id = $categoryId;
-            $menuItem->is_available = $request->has('is_available');
             $menuItem->save();
 
-            return redirect()->back()->with('success', 'Menu berhasil ditambahkan');
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil ditambahkan'
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal: ' . implode(', ', $e->errors()['is_available'] ?? []),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('Error in createMenuItem: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menambahkan menu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menambahkan menu: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -96,18 +171,25 @@ class AdminController extends Controller
                 'description' => 'required|string',
                 'price' => 'required|numeric|min:0',
                 'is_available' => 'sometimes|boolean',
-                'image' => 'required|string'
             ]);
 
             $menuItem = MenuItem::findOrFail($id);
-            $menuItem->fill($validated);
-            $menuItem->is_available = $request->has('is_available');
-            $menuItem->save();
+            $menuItem->update([
+                'name' => $validated['name'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'is_available' => $request->has('is_available')
+            ]);
 
-            return redirect()->back()->with('success', 'Menu berhasil diperbarui');
+            return response()->json([
+                'success' => true,
+                'message' => 'Menu berhasil diperbarui'
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in updateMenuItem: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat memperbarui menu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat memperbarui menu: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -137,15 +219,22 @@ class AdminController extends Controller
                 'name' => 'required|string|max:255'
             ]);
 
-            MenuCategory::create([
+            $category = MenuCategory::create([
                 'warung_id' => $warungId,
                 'name' => $validated['name']
             ]);
 
-            return redirect()->back()->with('success', 'Kategori menu berhasil dibuat');
+            // Selalu return JSON
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori menu berhasil dibuat',
+                'data' => $category
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in createMenuCategory: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat membuat kategori menu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat membuat kategori menu: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -156,12 +245,26 @@ class AdminController extends Controller
                 'name' => 'required|string|max:255'
             ]);
 
-            $menuCategory = MenuCategory::findOrFail($id);
-            $menuCategory->update($validated);
+            $category = MenuCategory::findOrFail($id);
+            $category->update($validated);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kategori menu berhasil diperbarui',
+                    'data' => $category
+                ]);
+            }
 
             return redirect()->back()->with('success', 'Kategori menu berhasil diperbarui');
         } catch (\Exception $e) {
             Log::error('Error in updateMenuCategory: ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memperbarui kategori menu: ' . $e->getMessage()
+                ], 500);
+            }
             return back()->with('error', 'Terjadi kesalahan saat memperbarui kategori menu.');
         }
     }
@@ -171,16 +274,24 @@ class AdminController extends Controller
         try {
             DB::beginTransaction();
 
-            $menuCategory = MenuCategory::findOrFail($id);
-            $menuCategory->menuItems()->delete();
-            $menuCategory->delete();
+            $category = MenuCategory::findOrFail($id);
+            $category->menuItems()->delete();
+            $category->delete();
 
             DB::commit();
-            return redirect()->back()->with('success', 'Kategori menu berhasil dihapus');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori menu berhasil dihapus'
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error in deleteMenuCategory: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menghapus kategori menu.');
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus kategori menu: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

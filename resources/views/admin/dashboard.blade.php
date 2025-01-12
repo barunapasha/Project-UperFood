@@ -107,143 +107,96 @@
     </div>
 
     <!-- Warung Modal -->
-    <div id="warungModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden, flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium">Tambah Warung Baru</h3>
-                <button onclick="closeWarungModal()" class="text-gray-400 hover:text-gray-500">
+    <div id="warungModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden" style="z-index: 50;">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full relative">
+                <!-- Close button -->
+                <button onclick="closeWarungModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
                     <span class="sr-only">Close</span>
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+
+                <div class="mb-4">
+                    <h3 class="text-lg font-medium">Tambah Warung Baru</h3>
+                </div>
+
+                <form id="warungForm" method="POST" action="{{ route('admin.warung.store') }}" class="space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nama Warung</label>
+                        <input type="text" name="name" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                        <textarea name="description" rows="3" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lokasi</label>
+                        <input type="text" name="location" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeWarungModal()"
+                            class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <form action="{{ route('admin.warung.store') }}" method="POST" class="space-y-4">
-                @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Nama Warung</label>
-                    <input type="text" name="name" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Deskripsi</label>
-                    <textarea name="description" rows="3" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Lokasi</label>
-                    <input type="text" name="location" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">URL Gambar (Opsional)</label>
-                    <input type="text" name="image" placeholder="Kosongkan untuk menggunakan gambar default"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
-                </div>
-
-                <div class="mt-5 sm:mt-6 flex justify-end space-x-3">
-                    <button type="button" onclick="closeWarungModal()"
-                        class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                        Simpan
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
+
     <script>
-        // Page load animation
-        document.addEventListener('DOMContentLoaded', function() {
-            document.body.classList.add('fade-in');
-        });
+    document.getElementById('warungForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
 
-        // Modal functions
-        function openWarungModal() {
-            const modal = document.getElementById('warungModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-            }, 0);
-        }
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
 
-        function closeWarungModal() {
-            const modal = document.getElementById('warungModal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                // Reset form
-                document.getElementById('warungForm').reset();
-            }, 300);
-        }
+            const data = await response.json();
 
-        function deleteWarung(warungId) {
-            if (confirm('Apakah Anda yakin ingin menghapus warung ini?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/admin/warung/${warungId}`;
-
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = document.querySelector('meta[name="csrf-token"]').content;
-
-                form.appendChild(methodInput);
-                form.appendChild(csrfInput);
-                document.body.appendChild(form);
-                form.submit();
+            if (response.ok) {
+                alert('Warung berhasil ditambahkan!');
+                window.location.reload();
+            } else {
+                throw new Error(data.message || 'Terjadi kesalahan saat menambahkan warung');
             }
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message || 'Terjadi kesalahan saat menambahkan warung');
         }
+    });
 
-        // Close modal when clicking outside
-        document.getElementById('warungModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeWarungModal();
-            }
-        });
+    function openWarungModal() {
+        document.getElementById('warungModal').classList.remove('hidden');
+    }
 
-        // Form submission animation
-        document.getElementById('warungForm').addEventListener('submit', function() {
-            const submitButton = this.querySelector('button[type="submit"]');
-            submitButton.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 inline" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Menyimpan...';
-            submitButton.disabled = true;
-        });
-
-        // Success message auto-dismiss
-        const successMessage = document.querySelector('.bg-green-100');
-        if (successMessage) {
-            setTimeout(() => {
-                successMessage.style.opacity = '0';
-                successMessage.style.transition = 'opacity 0.5s ease-in-out';
-                setTimeout(() => {
-                    successMessage.remove();
-                }, 500);
-            }, 3000);
-        }
-
-        // Error message auto-dismiss
-        const errorMessage = document.querySelector('.bg-red-100');
-        if (errorMessage) {
-            setTimeout(() => {
-                errorMessage.style.opacity = '0';
-                errorMessage.style.transition = 'opacity 0.5s ease-in-out';
-                setTimeout(() => {
-                    errorMessage.remove();
-                }, 500);
-            }, 3000);
-        }
-    </script>
+    function closeWarungModal() {
+        document.getElementById('warungModal').classList.add('hidden');
+        document.getElementById('warungForm').reset();
+    }
+</script>
 </body>
 
 </html>

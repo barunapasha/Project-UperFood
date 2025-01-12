@@ -11,12 +11,11 @@ class MenuItem extends Model
         'name',
         'description',
         'price',
-        'image',
         'is_available'
     ];
 
-    public function menuCategory()
-    {
-        return $this->belongsTo(MenuCategory::class);
-    }
+    protected $casts = [
+        'is_available' => 'boolean',
+        'price' => 'float'
+    ];
 }

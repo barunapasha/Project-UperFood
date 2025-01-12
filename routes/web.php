@@ -27,24 +27,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/warung/kantin-atas', [WarungController::class, 'kantinAtas'])->name('kantin-atas');
     Route::get('/warung/kantin-bawah', [WarungController::class, 'kantinBawah'])->name('kantin-bawah');
     Route::get('/warung/{id}', [WarungDetailController::class, 'show'])->name('warung.detail');
+    Route::get('/warung/{id}', [WarungDetailController::class, 'show'])->name('warung.detail');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');  // Ganti dari dashboard ke index
+
     // Warung Management
     Route::post('/warung', [AdminController::class, 'storeWarung'])->name('warung.store');
     Route::put('/warung/{id}', [AdminController::class, 'updateWarung'])->name('warung.update');
     Route::delete('/warung/{id}', [AdminController::class, 'deleteWarung'])->name('warung.delete');
     Route::get('/warung/{id}/menu', [AdminController::class, 'warungMenu'])->name('warung.menu');
 
-    // Menu Category Management
-    Route::post('/warung/{warungId}/category', [AdminController::class, 'createMenuCategory'])->name('category.store');
-    Route::put('/category/{id}', [AdminController::class, 'updateMenuCategory'])->name('category.update');
-    Route::delete('/category/{id}', [AdminController::class, 'deleteMenuCategory'])->name('category.delete');
-
     // Menu Item Management
     Route::post('/warung/{warungId}/category/{categoryId}/menu', [AdminController::class, 'createMenuItem'])->name('menu.store');
     Route::put('/menu/{id}', [AdminController::class, 'updateMenuItem'])->name('menu.update');
     Route::delete('/menu/{id}', [AdminController::class, 'deleteMenuItem'])->name('menu.delete');
+
+    // Menu Category Management
+    Route::post('/warung/{warungId}/category', [AdminController::class, 'createMenuCategory'])->name('category.store');
+    Route::put('/category/{id}', [AdminController::class, 'updateMenuCategory'])->name('category.update');
+    Route::delete('/category/{id}', [AdminController::class, 'deleteMenuCategory'])->name('category.delete');
 });

@@ -73,7 +73,7 @@
     </div>
 
     <!-- Update bagian Warung Kantin Atas di home.blade.php -->
-    <div class="container mx-auto px-4 mt-8">
+    <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinAtas">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold">Warung Kantin Atas</h2>
             <a href="{{ route('kantin-atas') }}" class="text-purple-500 hover:text-purple-700 transition duration-300">
@@ -83,11 +83,14 @@
 
         <div class="grid grid-cols-3 gap-4">
             @foreach($warungKantinAtas as $warung)
-            <a href="{{ route('warung.detail', $warung['id']) }}" class="block hover:shadow-lg transition duration-300">
+            <a href="{{ route('warung.detail', $warung['id']) }}"
+                class="warung-card block hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
                 <div class="bg-white rounded-lg overflow-hidden shadow-md">
-                    <img src="{{ asset($warung['image']) }}"
-                        alt="{{ $warung['name'] }}"
-                        class="w-full h-48 object-cover">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="{{ asset($warung['image']) }}"
+                            alt="{{ $warung['name'] }}"
+                            class="w-full h-48 object-cover transition duration-300 transform hover:scale-110">
+                    </div>
                     <div class="p-4">
                         <h3 class="font-bold text-lg">{{ $warung['name'] }}</h3>
                         <p class="text-gray-600 text-sm">{{ $warung['description'] }}</p>
@@ -113,21 +116,24 @@
     </div>
 
     <!-- Update bagian Warung Kantin Bawah -->
-    <div class="container mx-auto px-4 mt-8">
+    <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinBawah">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">Warung Kantin Bawah</h2>
-            <a href="{{ route('kantin-bawah') }}" class="text-purple-500 hover:text-purple-700 transition duration-300">
+            <h2 class="text-2xl font-bold">Warung Kantin Atas</h2>
+            <a href="{{ route('kantin-atas') }}" class="text-purple-500 hover:text-purple-700 transition duration-300">
                 Tampilkan semua warung
             </a>
         </div>
 
         <div class="grid grid-cols-3 gap-4">
-            @foreach($warungKantinBawah as $warung)
-            <a href="{{ route('warung.detail', $warung['id']) }}" class="block hover:shadow-lg transition duration-300">
+            @foreach($warungKantinAtas as $warung)
+            <a href="{{ route('warung.detail', $warung['id']) }}"
+                class="warung-card block hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
                 <div class="bg-white rounded-lg overflow-hidden shadow-md">
-                    <img src="{{ asset($warung['image']) }}"
-                        alt="{{ $warung['name'] }}"
-                        class="w-full h-48 object-cover">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="{{ asset($warung['image']) }}"
+                            alt="{{ $warung['name'] }}"
+                            class="w-full h-48 object-cover transition duration-300 transform hover:scale-110">
+                    </div>
                     <div class="p-4">
                         <h3 class="font-bold text-lg">{{ $warung['name'] }}</h3>
                         <p class="text-gray-600 text-sm">{{ $warung['description'] }}</p>
@@ -172,121 +178,107 @@
         </div>
     </footer>
     <script>
-        // Fade in animation for page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Animasi fade in untuk page load
             document.body.style.opacity = '0';
             setTimeout(() => {
                 document.body.style.transition = 'opacity 0.5s ease-in';
                 document.body.style.opacity = '1';
             }, 0);
-        });
 
-        // Smooth hover animations for cards
-        const cards = document.querySelectorAll('.bg-white.rounded-lg');
-        cards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-5px)';
-                this.style.transition = 'all 0.3s ease';
-                this.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+            // Animasi untuk section kantin
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe sections
+            document.querySelectorAll('#kantinAtas, #kantinBawah').forEach(section => {
+                observer.observe(section);
             });
 
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '';
-            });
-        });
+            // Hover animations for warung cards
+            const cards = document.querySelectorAll('.warung-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    const image = this.querySelector('img');
+                    image.style.transform = 'scale(1.1)';
+                });
 
-        // Modal animations
-        function openWarungModal() {
-            const modal = document.getElementById('warungModal');
-            modal.classList.remove('hidden');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.transition = 'opacity 0.3s ease-in';
-                modal.style.opacity = '1';
-            }, 0);
-        }
-
-        function closeWarungModal() {
-            const modal = document.getElementById('warungModal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function openCategoryModal() {
-            const modal = document.getElementById('categoryModal');
-            modal.classList.remove('hidden');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.transition = 'opacity 0.3s ease-in';
-                modal.style.opacity = '1';
-            }, 0);
-        }
-
-        function closeCategoryModal() {
-            const modal = document.getElementById('categoryModal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function openAddModal(categoryId) {
-            const modal = document.getElementById('menuModal');
-            modal.classList.remove('hidden');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.transition = 'opacity 0.3s ease-in';
-                modal.style.opacity = '1';
-            }, 0);
-            // ... rest of the existing openAddModal logic ...
-        }
-
-        function closeModal() {
-            const modal = document.getElementById('menuModal');
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-            resetForm();
-        }
-
-        // Button hover animations
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            button.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.05)';
-                this.style.transition = 'all 0.2s ease';
+                card.addEventListener('mouseleave', function() {
+                    const image = this.querySelector('img');
+                    image.style.transform = 'scale(1)';
+                });
             });
 
-            button.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        });
+            // Smooth scroll for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').slice(1);
+                    const targetElement = document.getElementById(targetId);
 
-        // Smooth scroll for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Search animation
+            const searchInput = document.querySelector('input[type="text"]');
+            searchInput.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.3s ease';
+            });
+
+            searchInput.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+
+            // Loading animation for navigation
+            const navigationLinks = document.querySelectorAll('a:not([href^="#"])');
+            navigationLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const currentText = this.innerHTML;
+                    this.innerHTML = '<div class="loading-spinner"></div>';
+                    setTimeout(() => {
+                        this.innerHTML = currentText;
+                    }, 500);
                 });
             });
         });
 
-        // Add loading animation for form submissions
-        const forms = document.querySelectorAll('form');
-        forms.forEach(form => {
-            form.addEventListener('submit', function() {
-                const submitButton = this.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.innerHTML = '<span class="animate-spin">↻</span> Loading...';
-                    submitButton.disabled = true;
-                }
-            });
-        });
+        // Add this to your CSS
+        const style = document.createElement('style');
+        style.textContent = `
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+        document.head.appendChild(style);
     </script>
 </body>
 

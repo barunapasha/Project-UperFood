@@ -28,7 +28,7 @@ class WarungController extends Controller
                 'description' => 'Indomie Goreng, Indomie Kuah',
                 'rating' => 4.3,
                 'distance' => '0.6 km',
-                'image' => 'images/indomie.jpg'
+                'image' => 'images/warung-indomie.jpg'
             ],
             // Tambahan warung untuk contoh
             [

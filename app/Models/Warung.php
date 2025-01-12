@@ -8,13 +8,13 @@ class Warung extends Model
 {
     protected $fillable = [
         'name',
-        'slug',
         'description',
         'location',
         'image',
-        'open_hours',
+        'rating',
         'distance',
-        'rating'
+        'slug',
+        'open_hours'
     ];
 
     public function menuCategories()
