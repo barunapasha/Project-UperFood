@@ -3,60 +3,109 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warung;
+use App\Models\MenuCategory;
+use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class WarungDetailController extends Controller
 {
-    public function show($id)
+    public function show($slug)
     {
         try {
-            // Ambil data warung dengan relasi menu categories dan menu items
-            $warung = Warung::with(['menuCategories.menuItems' => function($query) {
-                $query->where('is_available', true)
-                      ->orderBy('name', 'asc');
+            // Load warung dengan eager loading untuk menu categories dan items
+            $warung = Warung::with(['menuCategories.menuItems' => function ($query) {
+                $query->where('is_available', true); // Hanya ambil menu yang tersedia
             }])
-            ->where('slug', $id)
-            ->firstOrFail();
+                ->where('slug', $slug)
+                ->firstOrFail();
 
-            // Format data untuk view
+            // Log untuk debugging
+            \Log::info('Menu categories loaded:', [
+                'warung' => $warung->name,
+                'categories_count' => $warung->menuCategories->count(),
+            ]);
+
+            // Format data warung
             $warungData = [
-                'id' => $warung->slug,
+                'id' => $warung->id,
                 'name' => $warung->name,
                 'description' => $warung->description,
                 'rating' => number_format($warung->rating, 1),
-                'distance' => $warung->distance,
-                'image' => $warung->image ?? 'images/default-warung.jpg',
+                'distance' => $warung->distance ?? '0 km',
+                'image' => $this->getWarungImage($warung->name),
                 'open_hours' => $warung->open_hours ?? '08:00 - 17:00',
                 'location' => $warung->location,
-                'menus' => $warung->menuCategories->map(function($category) {
-                    return [
-                        'category' => $category->name,
-                        'items' => $category->menuItems->map(function($item) {
-                            return [
-                                'name' => $item->name,
-                                'description' => $item->description,
-                                'price' => $item->price,
-                                'image' => $item->image ?? 'images/default-menu.jpg',
-                                'is_available' => $item->is_available
-                            ];
-                        })->toArray()
-                    ];
-                })->filter(function($category) {
-                    // Filter kategori yang memiliki item menu
-                    return count($category['items']) > 0;
-                })->values()->toArray()
+                'menus' => []
             ];
 
-            // Log untuk debugging
-            \Log::info('Warung data:', ['data' => $warungData]);
+            // Format menu categories dan items
+            foreach ($warung->menuCategories as $category) {
+                $menuItems = $category->menuItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'description' => $item->description,
+                        'price' => $item->price,
+                        'is_available' => $item->is_available,
+                        'image' => $this->getMenuImage($item->name)
+                    ];
+                })->toArray();
+
+                if (!empty($menuItems)) {
+                    $warungData['menus'][] = [
+                        'category' => $category->name,
+                        'items' => $menuItems
+                    ];
+                }
+            }
+
+            \Log::info('Warung data formatted:', [
+                'categories_count' => count($warungData['menus']),
+                'has_items' => collect($warungData['menus'])->pluck('items')->flatten()->count()
+            ]);
 
             return view('warung.detail', compact('warungData'));
-
         } catch (\Exception $e) {
-            \Log::error('Error in warung detail:', ['error' => $e->getMessage()]);
+            \Log::error('Error in warung detail:', [
+                'slug' => $slug,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return redirect()->route('home')
-                           ->with('error', 'Warung tidak ditemukan atau terjadi kesalahan.');
+                ->with('error', 'Warung tidak ditemukan atau terjadi kesalahan.');
         }
+    }
+
+    private function getWarungImage($warungName)
+    {
+        // Map warung names to their respective images
+        return match ($warungName) {
+            'Nasi Padang' => 'images/nasi-padang.jpg',
+            'Ayam Suir' => 'images/ayam-suir.jpg',
+            'Warung Indomie' => 'images/warung-indomie.jpg',
+            'Bakso Malang' => 'images/bakso.jpg',
+            'Sate Madura' => 'images/sate.jpg',
+            'Gado-gado' => 'images/gado-gado.jpg',
+            'Hokkian' => 'images/hokkian.jpg',
+            'Katsu' => 'images/katsu.jpg',
+            'Soto' => 'images/soto.jpg',
+            'Warung Korean Food' => 'images/korean.jpg',
+            'Japanese Corner' => 'images/japanese.jpg',
+            'Chinese Food' => 'images/chinese.jpg',
+            default => 'images/default-warung.jpg'
+        };
+    }
+
+    private function getMenuImage($menuName)
+    {
+        // Convert menu name to kebab case for image filename
+        $filename = strtolower(str_replace(' ', '-', $menuName));
+        $defaultPath = 'images/menu/default-menu.jpg';
+        $imagePath = "images/menu/{$filename}.jpg";
+
+        // Check if menu image exists, otherwise return default
+        return file_exists(public_path($imagePath)) ? $imagePath : $defaultPath;
     }
 }

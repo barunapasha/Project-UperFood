@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WarungController;
 use App\Http\Controllers\WarungDetailController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CategoryController;
 
 Route::get('/login', [LoginController::class, 'showLoginPage'])->name('login');
 Route::post('/login', [LoginController::class, 'processLogin'])->name('login.process');
@@ -26,8 +27,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/warung/kantin-atas', [WarungController::class, 'kantinAtas'])->name('kantin-atas');
     Route::get('/warung/kantin-bawah', [WarungController::class, 'kantinBawah'])->name('kantin-bawah');
-    Route::get('/warung/{id}', [WarungDetailController::class, 'show'])->name('warung.detail');
-    Route::get('/warung/{id}', [WarungDetailController::class, 'show'])->name('warung.detail');
+    Route::get('/warung/{slug}', [WarungDetailController::class, 'show'])->name('warung.detail');
+
+    Route::controller(CategoryController::class)->group(function () {
+        Route::get('/category/new', 'new')->name('category.new');
+        Route::get('/category/favorite', 'favorite')->name('category.favorite');
+        Route::get('/category/local', 'local')->name('category.local');
+        Route::get('/category/bestseller', 'bestseller')->name('category.bestseller');
+    });
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {

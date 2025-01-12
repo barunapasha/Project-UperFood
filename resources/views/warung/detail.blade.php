@@ -9,7 +9,41 @@
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm">
-        <!-- Navbar content sama seperti home -->
+        <div class="container mx-auto px-4 py-2">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="{{ route('home') }}" class="hover:opacity-80 transition">
+                        <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood" style="height:7rem">
+                    </a>
+                </div>
+
+                <div class="flex-1 mx-8">
+                    <div class="relative">
+                        <input type="text" placeholder="Cari makanan atau warung"
+                            class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-full">
+                        <span class="absolute left-3 top-2.5 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 bg-white rounded-full px-4 py-1.5 border">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{{ $warungData['location'] }}</span>
+                    </div>
+                    <button class="bg-purple-500 text-white rounded-full w-10 h-10">
+                        <a href="{{ route('profile') }}" class="bg-purple-500 text-white rounded-full w-10 h-10 flex items-center justify-center">
+                            {{ substr(Auth::user()->name, 0, 2) }}
+                        </a>
+                    </button>
+                </div>
+            </div>
+        </div>
     </nav>
 
     <!-- Main Content -->
@@ -54,39 +88,27 @@
                         <span class="ml-1">{{ $warungData['open_hours'] }}</span>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <button class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition duration-300 transform hover:scale-105">
-                        Pesan Sekarang
-                    </button>
-                </div>
             </div>
         </div>
 
         <!-- Menu Categories -->
-        @foreach($warungData['menus'] as $menu)
+        @forelse($warungData['menus'] as $menu)
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6 opacity-0 transform translate-y-4 menu-category">
             <h2 class="text-2xl font-bold mb-4">{{ $menu['category'] }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($menu['items'] as $item)
-                <div class="menu-item bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
-                    <div class="relative">
-                        <img src="{{ asset($item['image']) }}" 
-                             alt="{{ $item['name'] }}" 
-                             class="w-full h-48 object-cover">
-                        @if($item['is_available'])
-                            <span class="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                                Tersedia
-                            </span>
-                        @else
-                            <span class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                                Tidak Tersedia
-                            </span>
-                        @endif
-                    </div>
+                <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
                     <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-2">{{ $item['name'] }}</h3>
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-semibold text-lg mb-2">{{ $item['name'] }}</h3>
+                            @if($item['is_available'])
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Tersedia</span>
+                            @else
+                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Tidak Tersedia</span>
+                            @endif
+                        </div>
                         <p class="text-gray-600 text-sm mb-2">{{ $item['description'] }}</p>
-                        <div class="flex justify-between items-center">
+                        <div class="flex justify-between items-center mt-4">
                             <span class="text-purple-600 font-bold">
                                 Rp {{ number_format($item['price'], 0, ',', '.') }}
                             </span>
@@ -102,11 +124,19 @@
                 @endforeach
             </div>
         </div>
-        @endforeach
+        @empty
+        <div class="text-center py-12 bg-white rounded-lg shadow">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada menu</h3>
+            <p class="mt-1 text-sm text-gray-500">Menu untuk warung ini belum tersedia.</p>
+        </div>
+        @endforelse
     </main>
 
     <!-- Cart Modal -->
-    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
         <div class="fixed right-0 top-0 h-full w-96 bg-white shadow-lg transform transition-transform duration-300" id="cartPanel">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -153,7 +183,6 @@
     </footer>
 
     <script>
-        // Animasi saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function() {
             // Fade in untuk header warung
             setTimeout(() => {
@@ -168,21 +197,6 @@
                     category.style.opacity = '1';
                     category.style.transform = 'translateY(0)';
                 }, 500 + (index * 200));
-            });
-
-            // Inisialisasi Intersection Observer
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-fade-in');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            // Observe semua menu items
-            document.querySelectorAll('.menu-item').forEach(item => {
-                observer.observe(item);
             });
         });
 
@@ -265,19 +279,8 @@
     </script>
 
     <style>
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .menu-category {
+            transition: all 0.5s ease-out;
         }
 
         #cartPanel {

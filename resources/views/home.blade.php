@@ -56,23 +56,100 @@
         </p>
     </div>
 
-    <!-- Categories -->
-    <div class="container mx-auto px-4 mt-6">
-        <div class="grid grid-cols-4 gap-4">
-            @foreach($categories as $category)
-            <div class="relative rounded-lg overflow-hidden shadow-md">
-                <img src="{{ asset($category['image']) }}"
-                    alt="{{ $category['name'] }}"
-                    class="w-full h-48 object-cover">
-                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black">
-                    <h3 class="text-white font-bold">{{ $category['name'] }}</h3>
+    <!-- Featured Categories Section -->
+    <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="featuredCategories">
+        <div class="grid grid-cols-4 gap-6">
+            <!-- Warung Baru -->
+            <a href="{{ route('category.new') }}" class="featured-card group">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Warung Baru</h3>
+                            <p class="text-blue-100 text-sm">Temukan warung-warung baru di sekitarmu</p>
+                        </div>
+                        <div class="text-white transform transition-transform duration-300 group-hover:rotate-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="inline-block bg-blue-400 bg-opacity-30 text-white px-3 py-1 rounded-full text-sm">
+                            5 Warung Baru
+                        </span>
+                    </div>
                 </div>
-            </div>
-            @endforeach
+            </a>
+
+            <!-- Terfavorit -->
+            <a href="{{ route('category.favorite') }}" class="featured-card group">
+                <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Terfavorit</h3>
+                            <p class="text-pink-100 text-sm">Warung dengan rating terbaik</p>
+                        </div>
+                        <div class="text-white transform transition-transform duration-300 group-hover:rotate-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="inline-block bg-pink-400 bg-opacity-30 text-white px-3 py-1 rounded-full text-sm">
+                            Rating 4.5+
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Lokal -->
+            <a href="{{ route('category.local') }}" class="featured-card group">
+                <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Lokal</h3>
+                            <p class="text-green-100 text-sm">Nikmati masakan khas lokal</p>
+                        </div>
+                        <div class="text-white transform transition-transform duration-300 group-hover:rotate-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="inline-block bg-green-400 bg-opacity-30 text-white px-3 py-1 rounded-full text-sm">
+                            Masakan Nusantara
+                        </span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Terlaris -->
+            <a href="{{ route('category.bestseller') }}" class="featured-card group">
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-2">Terlaris</h3>
+                            <p class="text-purple-100 text-sm">Menu favorit mahasiswa</p>
+                        </div>
+                        <div class="text-white transform transition-transform duration-300 group-hover:rotate-12">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="inline-block bg-purple-400 bg-opacity-30 text-white px-3 py-1 rounded-full text-sm">
+                            Best Seller
+                        </span>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 
-    <!-- Update bagian Warung Kantin Atas di home.blade.php -->
+    <!-- Update bagian Warung Kantin Atas -->
     <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinAtas">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold">Warung Kantin Atas</h2>
@@ -83,13 +160,12 @@
 
         <div class="grid grid-cols-3 gap-4">
             @foreach($warungKantinAtas as $warung)
-            <a href="{{ route('warung.detail', $warung['id']) }}"
-                class="warung-card block hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
-                <div class="bg-white rounded-lg overflow-hidden shadow-md">
+            <a href="{{ route('warung.detail', ['slug' => $warung['id']]) }}" class="warung-card block">
+                <div class="bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
                     <div class="relative h-48 overflow-hidden">
                         <img src="{{ asset($warung['image']) }}"
                             alt="{{ $warung['name'] }}"
-                            class="w-full h-48 object-cover transition duration-300 transform hover:scale-110">
+                            class="w-full h-48 object-cover transition duration-300">
                     </div>
                     <div class="p-4">
                         <h3 class="font-bold text-lg">{{ $warung['name'] }}</h3>
@@ -115,80 +191,98 @@
         </div>
     </div>
 
-    <!-- Update bagian Warung Kantin Bawah -->
+    <!-- Update bagian Warung Kantin Bawah dengan struktur yang sama -->
     <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinBawah">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">Warung Kantin Atas</h2>
-            <a href="{{ route('kantin-atas') }}" class="text-purple-500 hover:text-purple-700 transition duration-300">
+            <h2 class="text-2xl font-bold">Warung Kantin Bawah</h2>
+            <a href="{{ route('kantin-bawah') }}" class="text-purple-500 hover:text-purple-700 transition duration-300">
                 Tampilkan semua warung
             </a>
         </div>
 
         <div class="grid grid-cols-3 gap-4">
-            @foreach($warungKantinAtas as $warung)
-            <a href="{{ route('warung.detail', $warung['id']) }}"
-                class="warung-card block hover:shadow-lg transition duration-300 transform hover:-translate-y-1">
-                <div class="bg-white rounded-lg overflow-hidden shadow-md">
-                    <div class="relative h-48 overflow-hidden">
-                        <img src="{{ asset($warung['image']) }}"
-                            alt="{{ $warung['name'] }}"
-                            class="w-full h-48 object-cover transition duration-300 transform hover:scale-110">
-                    </div>
-                    <div class="p-4">
-                        <h3 class="font-bold text-lg">{{ $warung['name'] }}</h3>
-                        <p class="text-gray-600 text-sm">{{ $warung['description'] }}</p>
-                        <div class="flex items-center mt-2">
-                            <div class="flex items-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <span class="ml-1">{{ $warung['rating'] }}</span>
-                            </div>
-                            <div class="flex items-center ml-4">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="ml-1">{{ $warung['distance'] }}</span>
-                            </div>
+        @foreach($warungKantinBawah as $warung)
+        <a href="{{ route('warung.detail', ['slug' => $warung['id']]) }}" class="warung-card block">
+            <div class="bg-white rounded-lg overflow-hidden shadow-md transition duration-300">
+                <div class="relative h-48 overflow-hidden">
+                    <img src="{{ asset($warung['image']) }}"
+                        alt="{{ $warung['name'] }}"
+                        class="w-full h-48 object-cover transition duration-300">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-bold text-lg">{{ $warung['name'] }}</h3>
+                    <p class="text-gray-600 text-sm">{{ $warung['description'] }}</p>
+                    <div class="flex items-center mt-2">
+                        <div class="flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span class="ml-1">{{ $warung['rating'] }}</span>
+                        </div>
+                        <div class="flex items-center ml-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="ml-1">{{ $warung['distance'] }}</span>
                         </div>
                     </div>
                 </div>
-            </a>
-            @endforeach
-        </div>
+            </div>
+        </a>
+        @endforeach
+    </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-purple-500 text-white mt-12 py-8">
-        <div class="container mx-auto px-4 grid grid-cols-3 gap-8">
-            <div>
-                <h3 class="font-bold mb-4">Universitas Pertamina</h3>
-                <p>Jl. Teuku Nyak Arief, Simprug,<br>
-                    Kec. Kby. Lama, Kota Jakarta Selatan,<br>
-                    Daerah Khusus Ibukota Jakarta</p>
-            </div>
-            <div class="flex justify-center">
-                <img src="{{ asset('images/logo-uperfood-white.png') }}" alt="UperFood" style="height: 9rem;">
-            </div>
-            <div class="text-right">
-                <h3 class="font-bold mb-4">Makanan Lezat dan Enak di<br>
-                    Lingkungan Universitas Pertamina</h3>
-                <p>© UperFood 2024</p>
-            </div>
-        </div>
-    </footer>
     <script>
+        const featuredSection = document.getElementById('featuredCategories');
+        if (featuredSection) {
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '50px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.transition = 'all 0.5s ease-out';
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+
+                        // Animate cards
+                        const cards = entry.target.querySelectorAll('.featured-card');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, index * 100);
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            // Initialize cards with starting styles
+            const cards = featuredSection.querySelectorAll('.featured-card');
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.3s ease-out';
+            });
+
+            observer.observe(featuredSection);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Animasi fade in untuk page load
+            // Initial page fade in
             document.body.style.opacity = '0';
             setTimeout(() => {
                 document.body.style.transition = 'opacity 0.5s ease-in';
                 document.body.style.opacity = '1';
             }, 0);
 
-            // Animasi untuk section kantin
+            // Observer setup for sections
             const observerOptions = {
-                threshold: 0.1
+                threshold: 0.1,
+                rootMargin: '50px'
             };
 
             const observer = new IntersectionObserver((entries) => {
@@ -197,88 +291,59 @@
                         entry.target.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
                         entry.target.style.opacity = '1';
                         entry.target.style.transform = 'translateY(0)';
+
+                        // Animate cards within the section
+                        const cards = entry.target.querySelectorAll('.warung-card');
+                        cards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, index * 100);
+                        });
                     }
                 });
             }, observerOptions);
+
+            // Initialize all cards with starting styles
+            document.querySelectorAll('.warung-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.3s ease-out';
+
+                // Add consistent hover effects
+                card.addEventListener('mouseenter', function() {
+                    this.querySelector('img').style.transform = 'scale(1.1)';
+                    this.querySelector('.bg-white').style.transform = 'translateY(-8px)';
+                    this.querySelector('.bg-white').style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.querySelector('img').style.transform = 'scale(1)';
+                    this.querySelector('.bg-white').style.transform = 'translateY(0)';
+                    this.querySelector('.bg-white').style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                });
+            });
 
             // Observe sections
             document.querySelectorAll('#kantinAtas, #kantinBawah').forEach(section => {
                 observer.observe(section);
             });
 
-            // Hover animations for warung cards
-            const cards = document.querySelectorAll('.warung-card');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    const image = this.querySelector('img');
-                    image.style.transform = 'scale(1.1)';
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    const image = this.querySelector('img');
-                    image.style.transform = 'scale(1)';
-                });
-            });
-
-            // Smooth scroll for navigation
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const targetId = this.getAttribute('href').slice(1);
-                    const targetElement = document.getElementById(targetId);
-
-                    if (targetElement) {
-                        targetElement.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-
-            // Search animation
-            const searchInput = document.querySelector('input[type="text"]');
-            searchInput.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-                this.parentElement.style.transition = 'transform 0.3s ease';
-            });
-
-            searchInput.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
-
-            // Loading animation for navigation
-            const navigationLinks = document.querySelectorAll('a:not([href^="#"])');
-            navigationLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const currentText = this.innerHTML;
-                    this.innerHTML = '<div class="loading-spinner"></div>';
-                    setTimeout(() => {
-                        this.innerHTML = currentText;
-                    }, 500);
-                });
-            });
-        });
-
-        // Add this to your CSS
-        const style = document.createElement('style');
-        style.textContent = `
-        .loading-spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            // Add required styles
+            const style = document.createElement('style');
+            style.textContent = `
+        .warung-card {
+            transition: all 0.3s ease-out;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .warung-card img {
+            transition: transform 0.3s ease-out;
+        }
+        .warung-card .bg-white {
+            transition: all 0.3s ease-out;
         }
     `;
-        document.head.appendChild(style);
+            document.head.appendChild(style);
+        });
     </script>
 </body>
 
