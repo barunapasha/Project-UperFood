@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $warungData['name'] }} - UperFood</title>
     @vite('resources/css/app.css')
 </head>
+
 <body class="bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm">
@@ -59,9 +61,9 @@
         <!-- Warung Header -->
         <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8 opacity-0 transform translate-y-4" id="warungHeader">
             <div class="relative h-64">
-                <img src="{{ asset($warungData['image']) }}" 
-                     alt="{{ $warungData['name'] }}" 
-                     class="w-full h-full object-cover">
+                <img src="{{ asset($warungData['image']) }}"
+                    alt="{{ $warungData['name'] }}"
+                    class="w-full h-full object-cover">
                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
                     <h1 class="text-3xl font-bold text-white">{{ $warungData['name'] }}</h1>
                     <p class="text-white opacity-90 mt-2">{{ $warungData['description'] }}</p>
@@ -102,9 +104,9 @@
                         <div class="flex justify-between items-start">
                             <h3 class="font-semibold text-lg mb-2">{{ $item['name'] }}</h3>
                             @if($item['is_available'])
-                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Tersedia</span>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Tersedia</span>
                             @else
-                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Tidak Tersedia</span>
+                            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Tidak Tersedia</span>
                             @endif
                         </div>
                         <p class="text-gray-600 text-sm mb-2">{{ $item['description'] }}</p>
@@ -113,8 +115,8 @@
                                 Rp {{ number_format($item['price'], 0, ',', '.') }}
                             </span>
                             @if($item['is_available'])
-                            <button onclick="addToCart('{{ $item['name'] }}', {{ $item['price'] }})" 
-                                    class="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition duration-300 transform hover:scale-105">
+                            <button onclick="addToCart('{{ $item['name'] }}', {{ $item['price'] }})"
+                                class="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition duration-300 transform hover:scale-105">
                                 + Tambah
                             </button>
                             @endif
@@ -153,8 +155,8 @@
                         <span>Subtotal:</span>
                         <span id="cartSubtotal">Rp 0</span>
                     </div>
-                    <button onclick="checkout()" 
-                            class="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition duration-300">
+                    <button onclick="checkout()"
+                        class="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition duration-300">
                         Checkout
                     </button>
                 </div>
@@ -183,6 +185,31 @@
     </footer>
 
     <script>
+        function addToCart(menuItemId, quantity = 1) {
+            fetch('/cart/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        menu_item_id: menuItemId,
+                        quantity: quantity
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Item berhasil ditambahkan ke keranjang!');
+                        updateCartCount(); // Fungsi untuk update jumlah item di keranjang (opsional)
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menambahkan item ke keranjang');
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             // Fade in untuk header warung
             setTimeout(() => {
@@ -208,7 +235,11 @@
             if (existingItem) {
                 existingItem.quantity += 1;
             } else {
-                cart.push({ name, price, quantity: 1 });
+                cart.push({
+                    name,
+                    price,
+                    quantity: 1
+                });
             }
             updateCartUI();
             toggleCart(true);
@@ -217,7 +248,7 @@
         function updateCartUI() {
             const cartItems = document.getElementById('cartItems');
             const subtotal = document.getElementById('cartSubtotal');
-            
+
             cartItems.innerHTML = cart.map(item => `
                 <div class="flex justify-between items-center">
                     <div>
@@ -251,11 +282,11 @@
         function toggleCart(show = null) {
             const modal = document.getElementById('cartModal');
             const panel = document.getElementById('cartPanel');
-            
+
             if (show === null) {
                 show = modal.classList.contains('hidden');
             }
-            
+
             if (show) {
                 modal.classList.remove('hidden');
                 setTimeout(() => {
@@ -293,4 +324,5 @@
         }
     </style>
 </body>
+
 </html>

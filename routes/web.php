@@ -10,6 +10,7 @@ use App\Http\Controllers\WarungController;
 use App\Http\Controllers\WarungDetailController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CartController;
 
 Route::get('/login', [LoginController::class, 'showLoginPage'])->name('login');
 Route::post('/login', [LoginController::class, 'processLogin'])->name('login.process');
@@ -35,6 +36,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/category/local', 'local')->name('category.local');
         Route::get('/category/bestseller', 'bestseller')->name('category.bestseller');
     });
+
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
+    Route::patch('/cart/items/{id}', [CartController::class, 'updateItem'])->name('cart.update');
+    Route::delete('/cart/items/{id}', [CartController::class, 'removeItem'])->name('cart.remove');
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
