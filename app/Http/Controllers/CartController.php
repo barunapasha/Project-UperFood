@@ -7,14 +7,18 @@ use App\Models\CartItem;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class CartController extends Controller
 {
     public function index()
     {
-        $carts = Cart::with(['items.menuItem', 'warung'])
-            ->where('user_id', Auth::id())
-            ->get();
+        $userId = Auth::id();
+        $carts = Cache::remember("user_carts_" . $userId, now()->addMinutes(5), function () use ($userId) {
+            return Cart::with(['items.menuItem', 'warung'])
+                ->where('user_id', $userId)
+                ->get();
+        });
 
         return view('cart.index', compact('carts'));
     }
@@ -22,7 +26,7 @@ class CartController extends Controller
     public function addItem(Request $request)
     {
         $menuItem = MenuItem::findOrFail($request->menu_item_id);
-        
+
         // Cek apakah sudah ada cart untuk warung ini
         $cart = Cart::firstOrCreate([
             'user_id' => Auth::id(),
@@ -86,9 +90,9 @@ class CartController extends Controller
     {
         $cartItem = CartItem::findOrFail($itemId);
         $cart = $cartItem->cart;
-        
+
         $cartItem->delete();
-        
+
         // Update total cart
         $cart->total_amount = $cart->items->sum('subtotal');
         $cart->save();
@@ -102,5 +106,39 @@ class CartController extends Controller
             'success' => true,
             'message' => 'Item berhasil dihapus dari keranjang'
         ]);
+    }
+
+    public function checkout(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $userId = Auth::id();
+            $carts = Cart::with(['items.menuItem', 'warung'])
+                ->where('user_id', $userId)
+                ->get();
+
+            // Clear cart data
+            foreach ($carts as $cart) {
+                $cart->items()->delete();
+                $cart->delete();
+                Cache::forget($cart->getCacheKey());
+            }
+
+            // Clear other related cache
+            Cache::forget("cart_count_" . $userId);
+            Cache::forget("user_carts_" . $userId);
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Checkout berhasil'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat checkout: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
