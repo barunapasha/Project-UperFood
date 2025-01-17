@@ -80,11 +80,11 @@ class WarungDetailController extends Controller
 
     private function getWarungImage($warungName)
     {
-        // Map warung names to their respective images
         return match ($warungName) {
             'Nasi Padang' => 'images/nasi-padang.jpg',
             'Ayam Suir' => 'images/ayam-suir.jpg',
             'Warung Indomie' => 'images/warung-indomie.jpg',
+            'Warung Mang Ujang' => 'images/default-warung.jpg',
             'Bakso Malang' => 'images/bakso.jpg',
             'Sate Madura' => 'images/sate.jpg',
             'Gado-gado' => 'images/gado-gado.jpg',
@@ -100,12 +100,10 @@ class WarungDetailController extends Controller
 
     private function getMenuImage($menuName)
     {
-        // Convert menu name to kebab case for image filename
         $filename = strtolower(str_replace(' ', '-', $menuName));
         $defaultPath = 'images/menu/default-menu.jpg';
         $imagePath = "images/menu/{$filename}.jpg";
 
-        // Check if menu image exists, otherwise return default
         return file_exists(public_path($imagePath)) ? $imagePath : $defaultPath;
     }
 }

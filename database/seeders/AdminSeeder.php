@@ -1,5 +1,4 @@
 <?php
-// database/seeders/AdminSeeder.php
 
 namespace Database\Seeders;
 

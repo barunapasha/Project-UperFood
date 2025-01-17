@@ -10,7 +10,12 @@ class Cart extends Model
     protected $fillable = [
         'user_id',
         'warung_id',
-        'total_amount'
+        'total_amount',
+        'session_id'
+    ];
+
+    protected $casts = [
+        'total_amount' => 'decimal:2'
     ];
 
     public function items()
@@ -28,21 +33,14 @@ class Cart extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function getCacheKey()
-    {
-        return "cart_user_" . $this->user_id;
-    }
-
     protected static function boot()
     {
         parent::boot();
 
-        static::saved(function ($cart) {
-            Cache::put($cart->getCacheKey(), $cart->fresh(), now()->addDays(30));
-        });
-
-        static::deleted(function ($cart) {
-            Cache::forget($cart->getCacheKey());
+        static::creating(function ($cart) {
+            if (!$cart->session_id) {
+                $cart->session_id = session()->getId();
+            }
         });
     }
 }

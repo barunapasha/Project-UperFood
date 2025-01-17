@@ -29,12 +29,12 @@ class HomeController extends Controller
         ];
 
         try {
-            // Ambil data warung kantin atas
+            // Ambil 3 warung terbaru dari kantin atas
             $warungKantinAtas = Warung::where('location', 'like', '%Kantin Atas%')
-                ->orderBy('name', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->take(3)
                 ->get()
                 ->map(function($warung) {
-                    // Set gambar sesuai dengan nama warung
                     $image = match($warung->name) {
                         'Nasi Padang' => 'images/nasi-padang.jpg',
                         'Ayam Suir' => 'images/ayam-suir.jpg',
@@ -56,12 +56,12 @@ class HomeController extends Controller
                 })
                 ->toArray();
 
-            // Ambil data warung kantin bawah
+            // Ambil 3 warung terbaru dari kantin bawah
             $warungKantinBawah = Warung::where('location', 'like', '%Kantin Bawah%')
-                ->orderBy('name', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->take(3)
                 ->get()
                 ->map(function($warung) {
-                    // Set gambar sesuai dengan nama warung
                     $image = match($warung->name) {
                         'Hokkian' => 'images/hokkian.jpg',
                         'Katsu' => 'images/katsu.jpg',
@@ -91,7 +91,7 @@ class HomeController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // Data fallback dengan gambar yang sesuai
+            // Data fallback jika terjadi error
             $warungKantinAtas = [
                 [
                     'id' => 'nasi-padang',

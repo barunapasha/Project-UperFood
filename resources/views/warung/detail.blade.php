@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <title>{{ $warungData['name'] }} - UperFood</title>
     @vite('resources/css/app.css')
 </head>
@@ -18,6 +20,17 @@
                         <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood" style="height:7rem">
                     </a>
                 </div>
+
+                <a href="{{ route('cart.index') }}" class="relative">
+                    <div class="bg-white p-2 rounded-full shadow hover:shadow-md transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {{ App\Helpers\CartHelper::getCartItemsCount() }}
+                        </span>
+                    </div>
+                </a>
 
                 <div class="flex-1 mx-8">
                     <div class="relative">
@@ -115,7 +128,7 @@
                                 Rp {{ number_format($item['price'], 0, ',', '.') }}
                             </span>
                             @if($item['is_available'])
-                            <button onclick="addToCart('{{ $item['name'] }}', {{ $item['price'] }})"
+                            <button onclick="addToCart({{ $item['id'] }}, 1)"
                                 class="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600 transition duration-300 transform hover:scale-105">
                                 + Tambah
                             </button>
@@ -155,7 +168,7 @@
                         <span>Subtotal:</span>
                         <span id="cartSubtotal">Rp 0</span>
                     </div>
-                    <button onclick="checkout()"
+                    <button onclick="proceedToCheckout()"
                         class="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition duration-300">
                         Checkout
                     </button>
@@ -185,31 +198,84 @@
     </footer>
 
     <script>
+        let cart = [];
+
         function addToCart(menuItemId, quantity = 1) {
             fetch('/cart/items', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        menu_item_id: menuItemId,
-                        quantity: quantity
-                    })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    menu_item_id: menuItemId,
+                    quantity: quantity
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Item berhasil ditambahkan ke keranjang!');
-                        updateCartCount(); // Fungsi untuk update jumlah item di keranjang (opsional)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart count in navbar
+                    const cartCount = document.getElementById('cartCount');
+                    if (cartCount) {
+                        const currentCount = parseInt(cartCount.textContent || '0');
+                        cartCount.textContent = currentCount + quantity;
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat menambahkan item ke keranjang');
+                    
+                    Swal.fire({
+                        title: 'Berhasil!',
+                        text: 'Item berhasil ditambahkan ke keranjang',
+                        icon: 'success',
+                        confirmButtonText: 'Lihat Keranjang',
+                        showCancelButton: true,
+                        cancelButtonText: 'Lanjut Belanja',
+                        confirmButtonColor: '#7C3AED',
+                        cancelButtonColor: '#6B7280',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = "{{ route('cart.index') }}";
+                        }
+                    });
+
+                    // Update the cart UI
+                    loadCartData();
+                } else {
+                    throw new Error(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Terjadi kesalahan saat menambahkan ke keranjang',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#7C3AED',
                 });
+            });
         }
 
+        function proceedToCheckout() {
+            window.location.href = "{{ route('checkout.index') }}";
+        }
+
+        function loadCartData() {
+            fetch('/cart/items', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                cart = data.items;
+                updateCartUI();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Animasi dan UI
         document.addEventListener('DOMContentLoaded', function() {
             // Fade in untuk header warung
             setTimeout(() => {
@@ -225,59 +291,10 @@
                     category.style.transform = 'translateY(0)';
                 }, 500 + (index * 200));
             });
+
+            // Load initial cart data
+            loadCartData();
         });
-
-        // Cart functionality
-        let cart = [];
-
-        function addToCart(name, price) {
-            const existingItem = cart.find(item => item.name === name);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    name,
-                    price,
-                    quantity: 1
-                });
-            }
-            updateCartUI();
-            toggleCart(true);
-        }
-
-        function updateCartUI() {
-            const cartItems = document.getElementById('cartItems');
-            const subtotal = document.getElementById('cartSubtotal');
-
-            cartItems.innerHTML = cart.map(item => `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h4 class="font-semibold">${item.name}</h4>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="updateQuantity('${item.name}', ${item.quantity - 1})" class="text-gray-500">-</button>
-                            <span>${item.quantity}</span>
-                            <button onclick="updateQuantity('${item.name}', ${item.quantity + 1})" class="text-gray-500">+</button>
-                        </div>
-                    </div>
-                    <span>Rp ${formatNumber(item.price * item.quantity)}</span>
-                </div>
-            `).join('');
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            subtotal.textContent = `Rp ${formatNumber(total)}`;
-        }
-
-        function updateQuantity(name, newQuantity) {
-            if (newQuantity < 1) {
-                cart = cart.filter(item => item.name !== name);
-            } else {
-                const item = cart.find(item => item.name === name);
-                if (item) {
-                    item.quantity = newQuantity;
-                }
-            }
-            updateCartUI();
-        }
 
         function toggleCart(show = null) {
             const modal = document.getElementById('cartModal');
@@ -300,8 +317,82 @@
             }
         }
 
-        function checkout() {
-            alert('Fitur checkout akan segera hadir!');
+        function updateCartUI() {
+            const cartItems = document.getElementById('cartItems');
+            const subtotal = document.getElementById('cartSubtotal');
+            
+            if (!cart.length) {
+                cartItems.innerHTML = '<p class="text-gray-500 text-center">Keranjang kosong</p>';
+                subtotal.textContent = 'Rp 0';
+                return;
+            }
+
+            let total = 0;
+            cartItems.innerHTML = cart.map(item => {
+                total += item.price * item.quantity;
+                return `
+                    <div class="flex justify-between items-center p-2 border-b">
+                        <div>
+                            <h4 class="font-semibold">${item.name}</h4>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
+                                    class="text-gray-500 hover:text-purple-600">-</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})"
+                                    class="text-gray-500 hover:text-purple-600">+</button>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium">Rp ${formatNumber(item.price * item.quantity)}</p>
+                            <button onclick="removeItem(${item.id})" 
+                                class="text-red-500 text-sm hover:text-red-600">Hapus</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            subtotal.textContent = `Rp ${formatNumber(total)}`;
+        }
+
+        function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) {
+                removeItem(itemId);
+                return;
+            }
+
+            fetch(`/cart/items/${itemId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ quantity: newQuantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadCartData();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function removeItem(itemId) {
+            fetch(`/cart/items/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadCartData();
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
 
         function formatNumber(number) {
@@ -324,5 +415,4 @@
         }
     </style>
 </body>
-
 </html>
