@@ -29,14 +29,16 @@ Route::post('/sign-up', [SignUpController::class, 'store'])->name('sign-up.store
 // Cart Routes (accessible for guests)
 Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::get('/cart/items', [CartController::class, 'getItems'])->name('cart.items');
+Route::get('/cart/count', [CartController::class, 'getCartCount']); 
 Route::patch('/cart/items/{id}', [CartController::class, 'updateItem'])->name('cart.update');
 Route::delete('/cart/items/{id}', [CartController::class, 'removeItem'])->name('cart.remove');
 
-// Protected Routes (Require Authentication)
 Route::middleware(['auth'])->group(function () {
     // Home & Profile
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::get('/search', [HomeController::class, 'search'])->name('search');
 
     // Warung Routes
     Route::get('/warung/kantin-atas', [WarungController::class, 'kantinAtas'])->name('kantin-atas');

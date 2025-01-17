@@ -5,25 +5,23 @@ namespace App\Helpers;
 use App\Models\Cart;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 
 class CartHelper
 {
     public static function getCartItemsCount()
     {
-        if (!Auth::check()) {
-            return 0;
+        $cartId = Session::get('cart_id');
+        $count = 0;
+
+        if ($cartId) {
+            $count = CartItem::where('cart_id', $cartId)->sum('quantity');
+        } elseif (Auth::check()) {
+            $count = Cart::where('user_id', Auth::id())
+                ->join('cart_items', 'carts.id', '=', 'cart_items.cart_id')
+                ->sum('cart_items.quantity');
         }
 
-        $userId = Auth::id();
-        return Cache::remember("cart_count_" . $userId, now()->addMinutes(5), function () use ($userId) {
-            // Get all carts for the user and sum the quantities of their items
-            return Cart::where('user_id', $userId)
-                      ->with('items')
-                      ->get()
-                      ->pluck('items')
-                      ->flatten()
-                      ->sum('quantity');
-        });
+        return $count;
     }
 }

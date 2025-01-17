@@ -34,8 +34,8 @@ class HomeController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get()
-                ->map(function($warung) {
-                    $image = match($warung->name) {
+                ->map(function ($warung) {
+                    $image = match ($warung->name) {
                         'Nasi Padang' => 'images/nasi-padang.jpg',
                         'Ayam Suir' => 'images/ayam-suir.jpg',
                         'Warung Indomie' => 'images/indomie.jpg',
@@ -61,8 +61,8 @@ class HomeController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get()
-                ->map(function($warung) {
-                    $image = match($warung->name) {
+                ->map(function ($warung) {
+                    $image = match ($warung->name) {
                         'Hokkian' => 'images/hokkian.jpg',
                         'Katsu' => 'images/katsu.jpg',
                         'Soto' => 'images/soto.jpg',
@@ -84,7 +84,6 @@ class HomeController extends Controller
                 ->toArray();
 
             return view('home', compact('categories', 'warungKantinAtas', 'warungKantinBawah'));
-
         } catch (\Exception $e) {
             \Log::error('Error fetching warung data:', [
                 'error' => $e->getMessage(),
@@ -154,5 +153,56 @@ class HomeController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('query');
+
+        if (empty($query)) {
+            return response()->json([]);
+        }
+
+        try {
+            // Search in warungs
+            $warungs = Warung::where('name', 'like', "%{$query}%")
+                ->orWhere('description', 'like', "%{$query}%")
+                ->get()
+                ->map(function ($warung) {
+                    return [
+                        'id' => $warung->slug,
+                        'name' => $warung->name,
+                        'description' => $warung->description,
+                        'type' => 'warung',
+                        'image' => $this->getWarungImage($warung->name),
+                        'rating' => number_format($warung->rating, 1),
+                        'location' => $warung->location
+                    ];
+                });
+
+            // Search in menu items
+            $menuItems = MenuItem::with(['menuCategory.warung'])
+                ->where('name', 'like', "%{$query}%")
+                ->orWhere('description', 'like', "%{$query}%")
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'description' => $item->description,
+                        'type' => 'menu',
+                        'price' => $item->price,
+                        'warung_name' => $item->menuCategory->warung->name,
+                        'warung_slug' => $item->menuCategory->warung->slug
+                    ];
+                });
+
+            return response()->json([
+                'warungs' => $warungs,
+                'menuItems' => $menuItems
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Terjadi kesalahan saat mencari'], 500);
+        }
     }
 }

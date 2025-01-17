@@ -14,27 +14,23 @@ class CheckoutController extends Controller
 {
     public function index()
     {
-        // Get cart from session or user ID
         $cartId = Session::get('cart_id');
-        $carts = [];
-
-        if ($cartId) {
-            $carts = Cart::with(['items.menuItem', 'warung'])
-                ->where('id', $cartId)
-                ->get();
-        } elseif (Auth::check()) {
-            $carts = Cart::with(['items.menuItem', 'warung'])
-                ->where('user_id', Auth::id())
-                ->get();
+        if (!$cartId) {
+            return redirect()->route('cart.index')
+                ->with('error', 'Keranjang kosong');
         }
 
+        $carts = Cart::with(['items.menuItem', 'warung'])
+            ->where('id', $cartId)
+            ->get();
+
         if ($carts->isEmpty()) {
+            Session::forget('cart_id');
             return redirect()->route('cart.index')
                 ->with('error', 'Keranjang kosong');
         }
 
         $total = $carts->sum('total_amount');
-
         return view('checkout.index', compact('carts', 'total'));
     }
 
@@ -60,7 +56,7 @@ class CheckoutController extends Controller
                 throw new \Exception('Keranjang kosong');
             }
 
-            foreach($carts as $cart) {
+            foreach ($carts as $cart) {
                 // Create new order
                 $order = Order::create([
                     'user_id' => Auth::id(),
@@ -71,7 +67,7 @@ class CheckoutController extends Controller
                 ]);
 
                 // Copy items from cart to order
-                foreach($cart->items as $item) {
+                foreach ($cart->items as $item) {
                     OrderItem::create([
                         'order_id' => $order->id,
                         'menu_item_id' => $item->menu_item_id,
@@ -90,10 +86,9 @@ class CheckoutController extends Controller
             Session::forget('cart_id');
 
             DB::commit();
-            
+
             return redirect()->route('orders.index')
                 ->with('success', 'Pesanan berhasil dibuat!');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan saat checkout: ' . $e->getMessage());

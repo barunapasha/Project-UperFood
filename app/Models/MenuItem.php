@@ -18,4 +18,10 @@ class MenuItem extends Model
         'is_available' => 'boolean',
         'price' => 'float'
     ];
+
+    // Tambahkan relationship ke MenuCategory
+    public function menuCategory()
+    {
+        return $this->belongsTo(MenuCategory::class);
+    }
 }

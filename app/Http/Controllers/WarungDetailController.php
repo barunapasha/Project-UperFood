@@ -15,10 +15,10 @@ class WarungDetailController extends Controller
         try {
             // Load warung dengan eager loading untuk menu categories dan items
             $warung = Warung::with(['menuCategories.menuItems' => function ($query) {
-                $query->where('is_available', true); // Hanya ambil menu yang tersedia
+                $query->where('is_available', true);
             }])
-                ->where('slug', $slug)
-                ->firstOrFail();
+            ->where('slug', $slug)
+            ->firstOrFail();
 
             // Log untuk debugging
             \Log::info('Menu categories loaded:', [
@@ -66,6 +66,7 @@ class WarungDetailController extends Controller
             ]);
 
             return view('warung.detail', compact('warungData'));
+
         } catch (\Exception $e) {
             \Log::error('Error in warung detail:', [
                 'slug' => $slug,
@@ -80,11 +81,10 @@ class WarungDetailController extends Controller
 
     private function getWarungImage($warungName)
     {
-        return match ($warungName) {
+        return match($warungName) {
             'Nasi Padang' => 'images/nasi-padang.jpg',
             'Ayam Suir' => 'images/ayam-suir.jpg',
             'Warung Indomie' => 'images/warung-indomie.jpg',
-            'Warung Mang Ujang' => 'images/default-warung.jpg',
             'Bakso Malang' => 'images/bakso.jpg',
             'Sate Madura' => 'images/sate.jpg',
             'Gado-gado' => 'images/gado-gado.jpg',

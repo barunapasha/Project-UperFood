@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Cache;
 
 class Cart extends Model
 {
@@ -12,10 +11,6 @@ class Cart extends Model
         'warung_id',
         'total_amount',
         'session_id'
-    ];
-
-    protected $casts = [
-        'total_amount' => 'decimal:2'
     ];
 
     public function items()
@@ -31,16 +26,5 @@ class Cart extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($cart) {
-            if (!$cart->session_id) {
-                $cart->session_id = session()->getId();
-            }
-        });
     }
 }

@@ -10,8 +10,9 @@ return new class extends Migration
     {
         Schema::table('carts', function (Blueprint $table) {
             $table->string('session_id')->nullable()->after('user_id');
-            // Make user_id nullable since we can have guest carts
-            $table->unsignedBigInteger('user_id')->nullable()->change();
+            $table->index('session_id');
+            // Buat user_id nullable karena kita ingin support guest cart
+            $table->foreignId('user_id')->nullable()->change();
         });
     }
 
@@ -19,7 +20,7 @@ return new class extends Migration
     {
         Schema::table('carts', function (Blueprint $table) {
             $table->dropColumn('session_id');
-            $table->unsignedBigInteger('user_id')->change();
+            $table->foreignId('user_id')->nullable(false)->change();
         });
     }
 };

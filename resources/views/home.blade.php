@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <title>UperFood - Universitas Pertamina</title>
     @vite('resources/css/app.css')
 </head>
@@ -68,7 +69,6 @@
         </p>
     </div>
 
-    <!-- Featured Categories Section -->
     <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="featuredCategories">
         <div class="grid grid-cols-4 gap-6">
             <!-- Warung Baru -->
@@ -161,7 +161,6 @@
         </div>
     </div>
 
-    <!-- Update bagian Warung Kantin Atas -->
     <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinAtas">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold">Warung Kantin Atas</h2>
@@ -203,7 +202,6 @@
         </div>
     </div>
 
-    <!-- Update bagian Warung Kantin Bawah dengan struktur yang sama -->
     <div class="container mx-auto px-4 mt-8 opacity-0 transform translate-y-4" id="kantinBawah">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold">Warung Kantin Bawah</h2>
@@ -269,7 +267,8 @@
                 <div class="flex flex-col items-center justify-center">
                     <img src="{{ asset('images/logo-uperfood-white.png') }}"
                         alt="UperFood"
-                        class="h-24 mb-4 transform hover:scale-105 transition-transform duration-300">
+                        class="mb-4 transform hover:scale-105 transition-transform duration-300"
+                        style="height:9rem">
                     <div class="flex space-x-4 mt-4">
                         <a href="#" class="hover:text-purple-200 transition-colors">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -414,6 +413,122 @@
         }
     `;
             document.head.appendChild(style);
+        });
+
+        // Add this JavaScript to the existing script section in home.blade.php
+
+        // Create a debounce function to limit API calls
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Add search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
+            const searchResults = document.createElement('div');
+            searchResults.className = 'absolute w-full mt-2 bg-white rounded-lg shadow-lg z-50 hidden';
+            searchInput.parentNode.appendChild(searchResults);
+
+            const performSearch = debounce(async (query) => {
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (!response.ok) throw new Error(data.error);
+
+                    // Clear previous results
+                    searchResults.innerHTML = '';
+
+                    // Display results
+                    if (data.warungs.length === 0 && data.menuItems.length === 0) {
+                        searchResults.innerHTML = `
+                    <div class="p-4 text-gray-500 text-center">
+                        Tidak ada hasil ditemukan
+                    </div>
+                `;
+                    } else {
+                        // Warung results
+                        if (data.warungs.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                        </div>
+                    `;
+                            data.warungs.forEach(warung => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${warung.id}" class="block p-3 hover:bg-gray-50">
+                                <div class="flex items-center">
+                                    <img src="${warung.image}" class="w-12 h-12 object-cover rounded" alt="${warung.name}">
+                                    <div class="ml-3">
+                                        <div class="font-semibold">${warung.name}</div>
+                                        <div class="text-sm text-gray-600">${warung.location}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+
+                        // Menu items results
+                        if (data.menuItems.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                        </div>
+                    `;
+                            data.menuItems.forEach(item => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${item.warung_slug}" class="block p-3 hover:bg-gray-50">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold">${item.name}</div>
+                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                    </div>
+                                    <div class="text-purple-600 font-semibold">
+                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+                    }
+
+                    searchResults.classList.remove('hidden');
+                } catch (error) {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = `
+                <div class="p-4 text-red-500 text-center">
+                    Terjadi kesalahan saat mencari
+                </div>
+            `;
+                }
+            }, 300);
+
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                performSearch(query);
+            });
+
+            // Close search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>
