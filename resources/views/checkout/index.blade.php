@@ -4,13 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script type="text/javascript"
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}">
+    </script>
     <title>Checkout - UperFood</title>
     @vite('resources/css/app.css')
 </head>
 
 <body class="bg-gray-100">
     <!-- Navbar -->
-   <nav class="bg-white shadow-sm mb-8">
+    <nav class="bg-white shadow-sm mb-8">
         <div class="container mx-auto px-4 py-2">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
@@ -54,6 +59,7 @@
 
     <div class="container mx-auto px-4 mb-16">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Order Summary Section -->
             <div class="col-span-2">
                 <div class="bg-white rounded-lg shadow p-6 mb-6 fade-in-up">
                     <h2 class="text-2xl font-bold mb-4">Ringkasan Pesanan</h2>
@@ -70,48 +76,45 @@
                         </div>
                         @endforeach
                         <div class="mt-4 pt-4 border-t slide-in-right">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span class="font-medium">Rp {{ number_format($cart->total_amount, 0, ',', '.') }}</span>
+                            <div class="flex justify-between">
+                                <span>Subtotal</span>
+                                <span class="font-medium">Rp {{ number_format($cart->total_amount, 0, ',', '.') }}</span>
+                            </div>
                         </div>
                     </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
-        </div>
 
-        <!-- Payment Summary -->
-        <div class="col-span-1">
-            <div class="bg-white rounded-lg shadow p-6 fade-in-up" style="animation-delay: 0.3s;">
-                <h2 class="text-2xl font-bold mb-4">Total Pembayaran</h2>
-                <div class="space-y-3 mb-6">
-                    <div class="flex justify-between">
-                        <span>Total Pesanan</span>
-                        <span class="font-medium">Rp {{ number_format($total, 0, ',', '.') }}</span>
+            <!-- Payment Summary -->
+            <div class="col-span-1">
+                <div class="bg-white rounded-lg shadow p-6 fade-in-up" style="animation-delay: 0.3s;">
+                    <h2 class="text-2xl font-bold mb-4">Total Pembayaran</h2>
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between">
+                            <span>Total Pesanan</span>
+                            <span class="font-medium">Rp {{ number_format($total, 0, ',', '.') }}</span>
+                        </div>
                     </div>
-                </div>
-                <!-- Buttons Container -->
-                <div class="flex flex-col space-y-3">
-                    <form action="{{ route('checkout.process') }}" method="POST">
-                        @csrf
-                        <button type="submit"
-                            class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
+                    <!-- Buttons Container -->
+                    <div class="flex flex-col space-y-3">
+                        <button type="button" id="pay-button" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105">
                             Bayar Sekarang
                         </button>
-                    </form>
-                    <a href="javascript:history.back()"
-                        class="w-full bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 text-center transform hover:scale-105 hover:shadow-lg">
-                        Kembali
-                    </a>
+                        <a href="{{ route('cart.index') }}" class="w-full bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 text-center transform hover:scale-105 hover:shadow-lg">
+                            Kembali
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-purple-500 text-white py-12">
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-3 gap-12">
-                <!-- Kolom 1: Informasi Alamat -->
+                <!-- Address Column -->
                 <div class="space-y-4">
                     <h3 class="text-xl font-bold mb-6">Universitas Pertamina</h3>
                     <div class="flex items-start space-x-2">
@@ -127,12 +130,9 @@
                     </div>
                 </div>
 
-                <!-- Kolom 2: Logo -->
+                <!-- Logo Column -->
                 <div class="flex flex-col items-center justify-center">
-                    <img src="{{ asset('images/logo-uperfood-white.png') }}"
-                        alt="UperFood"
-                        class="mb-4 transform hover:scale-105 transition-transform duration-300"
-                        style="height:9rem">
+                    <img src="{{ asset('images/logo-uperfood-white.png') }}" alt="UperFood" class="mb-4 transform hover:scale-105 transition-transform duration-300" style="height:9rem">
                     <div class="flex space-x-4 mt-4">
                         <a href="#" class="hover:text-purple-200 transition-colors">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -152,32 +152,142 @@
                     </div>
                 </div>
 
-                <!-- Kolom 3: Informasi Tambahan -->
+                <!-- Additional Info Column -->
                 <div class="text-right">
-                    <h3 class="text-xl font-bold mb-6">Makanan Lezat dan Enak di<br>
-                        Lingkungan Universitas Pertamina</h3>
-                    <div class="mt-4 space-y-2">
-                        <p class="text-purple-200">Jam Operasional:</p>
-                        <p>Senin - Jumat: 08:00 - 17:00</p>
-                        <p>Sabtu: 08:00 - 15:00</p>
-                    </div>
-                    <p class="mt-8">© UperFood 2024</p>
+                    <h3 class="text-xl font-bold mb-6">
+                        <h3 class="text-xl font-bold mb-6">Makanan Lezat dan Enak di<br>
+                            Lingkungan Universitas Pertamina</h3>
+                        <div class="mt-4 space-y-2">
+                            <p class="text-purple-200">Jam Operasional:</p>
+                            <p>Senin - Jumat: 08:00 - 17:00</p>
+                            <p>Sabtu: 08:00 - 15:00</p>
+                        </div>
+                        <p class="mt-8">© UperFood 2024</p>
                 </div>
             </div>
         </div>
     </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add initial opacity of 0 to prevent flash
-            document.body.style.opacity = '0';
 
-            // Fade in the entire page
-            setTimeout(() => {
-                document.body.style.transition = 'opacity 0.5s ease';
-                document.body.style.opacity = '1';
-            }, 0);
+    <!-- Payment Integration Script -->
+    <script>
+        document.getElementById('pay-button').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            fetch('{{ route("checkout.process") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.snap.pay(data.snap_token, {
+                            onSuccess: function(result) {
+                                window.location.href = '{{ route("home") }}';
+                            },
+                            onPending: function(result) {
+                                window.location.href = '{{ route("home") }}';
+                            },
+                            onError: function(result) {
+                                window.location.reload();
+                            },
+                            onClose: function() {
+                                alert('Anda menutup popup sebelum menyelesaikan pembayaran');
+                            }
+                        });
+                    } else {
+                        alert(data.message || 'Terjadi kesalahan');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat memproses pembayaran');
+                });
         });
     </script>
+
+    <style>
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+
+        .slide-in-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .stagger-animate>* {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .stagger-animate>*:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stagger-animate>*:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stagger-animate>*:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .stagger-animate>*:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .stagger-animate>*:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+    </style>
 </body>
 
 </html>

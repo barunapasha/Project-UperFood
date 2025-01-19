@@ -3,10 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\Warung;
+use App\Models\MenuCategory;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
+    private function getWarungImage($warungName)
+    {
+        return match ($warungName) {
+            'Nasi Padang' => 'images/nasi-padang.jpg',
+            'Ayam Suir' => 'images/ayam-suir.jpg',
+            'Warung Indomie' => 'images/warung-indomie.jpg',
+            'Bakso Malang' => 'images/bakso.jpg',
+            'Sate Madura' => 'images/sate.jpg',
+            'Gado-gado' => 'images/gado-gado.jpg',
+            'Hokkian' => 'images/hokkian.jpg',
+            'Katsu' => 'images/katsu.jpg',
+            'Soto' => 'images/soto.jpg',
+            'Warung Korean Food' => 'images/korean.jpg',
+            'Japanese Corner' => 'images/japanese.jpg',
+            'Chinese Food' => 'images/chinese.jpg',
+            default => 'images/default-warung.jpg'
+        };
+    }
+
     public function index()
     {
         $categories = [
@@ -29,56 +49,34 @@ class HomeController extends Controller
         ];
 
         try {
-            // Ambil 3 warung terbaru dari kantin atas
             $warungKantinAtas = Warung::where('location', 'like', '%Kantin Atas%')
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get()
                 ->map(function ($warung) {
-                    $image = match ($warung->name) {
-                        'Nasi Padang' => 'images/nasi-padang.jpg',
-                        'Ayam Suir' => 'images/ayam-suir.jpg',
-                        'Warung Indomie' => 'images/indomie.jpg',
-                        'Bakso Malang' => 'images/bakso.jpg',
-                        'Sate Madura' => 'images/sate.jpg',
-                        'Gado-gado' => 'images/gado-gado.jpg',
-                        default => $warung->image
-                    };
-
                     return [
                         'id' => $warung->slug,
                         'name' => $warung->name,
                         'description' => $warung->description,
                         'rating' => number_format($warung->rating, 1),
                         'distance' => $warung->distance ?? '0 km',
-                        'image' => $image
+                        'image' => $this->getWarungImage($warung->name)
                     ];
                 })
                 ->toArray();
 
-            // Ambil 3 warung terbaru dari kantin bawah
             $warungKantinBawah = Warung::where('location', 'like', '%Kantin Bawah%')
                 ->orderBy('created_at', 'desc')
                 ->take(3)
                 ->get()
                 ->map(function ($warung) {
-                    $image = match ($warung->name) {
-                        'Hokkian' => 'images/hokkian.jpg',
-                        'Katsu' => 'images/katsu.jpg',
-                        'Soto' => 'images/soto.jpg',
-                        'Warung Korean Food' => 'images/korean.jpg',
-                        'Japanese Corner' => 'images/japanese.jpg',
-                        'Chinese Food' => 'images/chinese.jpg',
-                        default => $warung->image
-                    };
-
                     return [
                         'id' => $warung->slug,
                         'name' => $warung->name,
                         'description' => $warung->description,
                         'rating' => number_format($warung->rating, 1),
                         'distance' => $warung->distance ?? '0 km',
-                        'image' => $image
+                        'image' => $this->getWarungImage($warung->name)
                     ];
                 })
                 ->toArray();
@@ -91,68 +89,12 @@ class HomeController extends Controller
             ]);
 
             // Data fallback jika terjadi error
-            $warungKantinAtas = [
-                [
-                    'id' => 'nasi-padang',
-                    'name' => 'Nasi Padang',
-                    'description' => 'Rendang, Ayam Bakar, Sayur Nangka',
-                    'rating' => 4.7,
-                    'distance' => '0.5 km',
-                    'image' => 'images/nasi-padang.jpg'
-                ],
-                [
-                    'id' => 'ayam-suir',
-                    'name' => 'Ayam Suir',
-                    'description' => 'Ayam Suir, Es Teh',
-                    'rating' => 5.0,
-                    'distance' => '0.45 km',
-                    'image' => 'images/ayam-suir.jpg'
-                ],
-                [
-                    'id' => 'warung-indomie',
-                    'name' => 'Warung Indomie',
-                    'description' => 'Indomie Goreng, Indomie Kuah',
-                    'rating' => 4.3,
-                    'distance' => '0.6 km',
-                    'image' => 'images/indomie.jpg'
-                ]
-            ];
-
-            $warungKantinBawah = [
-                [
-                    'id' => 'hokkian',
-                    'name' => 'Hokkian',
-                    'description' => 'Jus, Siomay, Risol',
-                    'rating' => 4.7,
-                    'distance' => '0.5 km',
-                    'image' => 'images/hokkian.jpg'
-                ],
-                [
-                    'id' => 'katsu',
-                    'name' => 'Katsu',
-                    'description' => 'Chicken Katsu, Steak',
-                    'rating' => 5.0,
-                    'distance' => '0.45 km',
-                    'image' => 'images/katsu.jpg'
-                ],
-                [
-                    'id' => 'soto',
-                    'name' => 'Soto',
-                    'description' => 'Soto Ayam, Es Jeruk',
-                    'rating' => 4.3,
-                    'distance' => '0.6 km',
-                    'image' => 'images/soto.jpg'
-                ]
-            ];
+            $warungKantinAtas = [];
+            $warungKantinBawah = [];
 
             return view('home', compact('categories', 'warungKantinAtas', 'warungKantinBawah'))
                 ->with('error', 'Terjadi kesalahan saat memuat data warung.');
         }
-    }
-
-    public function __construct()
-    {
-        $this->middleware('auth');
     }
 
     public function search(Request $request)
@@ -160,7 +102,10 @@ class HomeController extends Controller
         $query = $request->get('query');
 
         if (empty($query)) {
-            return response()->json([]);
+            return response()->json([
+                'warungs' => [],
+                'menuItems' => []
+            ]);
         }
 
         try {
@@ -172,37 +117,54 @@ class HomeController extends Controller
                     return [
                         'id' => $warung->slug,
                         'name' => $warung->name,
+                        'location' => $warung->location,
                         'description' => $warung->description,
                         'type' => 'warung',
                         'image' => $this->getWarungImage($warung->name),
-                        'rating' => number_format($warung->rating, 1),
-                        'location' => $warung->location
+                        'rating' => number_format($warung->rating, 1)
                     ];
                 });
 
-            // Search in menu items
-            $menuItems = MenuItem::with(['menuCategory.warung'])
-                ->where('name', 'like', "%{$query}%")
-                ->orWhere('description', 'like', "%{$query}%")
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'name' => $item->name,
-                        'description' => $item->description,
-                        'type' => 'menu',
-                        'price' => $item->price,
-                        'warung_name' => $item->menuCategory->warung->name,
-                        'warung_slug' => $item->menuCategory->warung->slug
-                    ];
+            // Search in warung with menus through menu categories
+            $warungsWithMenus = Warung::whereHas('menuCategories', function ($query) use ($request) {
+                $query->whereHas('menuItems', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->query . '%')
+                        ->orWhere('description', 'like', '%' . $request->query . '%');
                 });
+            })
+                ->with(['menuCategories.menuItems' => function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->query . '%')
+                        ->orWhere('description', 'like', '%' . $request->query . '%');
+                }])
+                ->get();
+
+            $menuItems = collect();
+            foreach ($warungsWithMenus as $warung) {
+                foreach ($warung->menuCategories as $category) {
+                    foreach ($category->menuItems as $item) {
+                        $menuItems->push([
+                            'id' => $item->id,
+                            'name' => $item->name,
+                            'description' => $item->description,
+                            'type' => 'menu',
+                            'price' => $item->price,
+                            'warung_name' => $warung->name,
+                            'warung_slug' => $warung->slug
+                        ]);
+                    }
+                }
+            }
 
             return response()->json([
                 'warungs' => $warungs,
                 'menuItems' => $menuItems
             ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Terjadi kesalahan saat mencari'], 500);
+            \Log::error('Search Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => true,
+                'message' => 'Terjadi kesalahan saat mencari'
+            ], 500);
         }
     }
 }

@@ -15,26 +15,69 @@ class CartController extends Controller
     public function index()
     {
         $cartId = Session::get('cart_id');
-        $carts = [];
 
-        if ($cartId) {
-            $carts = Cart::with(['items.menuItem.menuCategory.warung', 'warung'])
-                ->where('id', $cartId)
-                ->get();
-        } elseif (Auth::check()) {
-            $carts = Cart::with(['items.menuItem.menuCategory.warung', 'warung'])
-                ->where('user_id', Auth::id())
-                ->get();
-        }
-
-        if (request()->ajax()) {
-            return response()->json([
-                'success' => true,
-                'carts' => $carts
+        if (!$cartId) {
+            return view('cart.index', [
+                'carts' => collect(),
+                'isEmpty' => true
             ]);
         }
 
-        return view('cart.index', compact('carts'));
+        try {
+            // Get cart items dengan relasi yang dibutuhkan
+            $cartItems = CartItem::with(['menuItem.menuCategory.warung'])
+                ->where('cart_id', $cartId)
+                ->get();
+
+            if ($cartItems->isEmpty()) {
+                Session::forget('cart_id');
+                return view('cart.index', [
+                    'carts' => collect(),
+                    'isEmpty' => true
+                ]);
+            }
+
+            // Group items berdasarkan warung_id secara unik
+            $groupedCarts = collect();
+
+            $cartItems->each(function ($item) use (&$groupedCarts) {
+                $warungId = $item->menuItem->menuCategory->warung_id;
+                $warung = $item->menuItem->menuCategory->warung;
+
+                if (!$groupedCarts->has($warungId)) {
+                    $groupedCarts->put($warungId, [
+                        'warung' => $warung,
+                        'items' => collect(),
+                        'total_amount' => 0
+                    ]);
+                }
+
+                $groupData = $groupedCarts->get($warungId);
+                $groupData['items']->push($item);
+                $groupData['total_amount'] += $item->subtotal;
+                $groupedCarts->put($warungId, $groupData);
+            });
+
+            // Transform ke format yang dibutuhkan view
+            $carts = $groupedCarts->map(function ($group) {
+                return (object)[
+                    'warung' => $group['warung'],
+                    'items' => $group['items'],
+                    'total_amount' => $group['total_amount']
+                ];
+            })->values();
+
+            return view('cart.index', [
+                'carts' => $carts,
+                'isEmpty' => false
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Cart Error: ' . $e->getMessage());
+            return view('cart.index', [
+                'carts' => collect(),
+                'isEmpty' => true
+            ])->with('error', 'Terjadi kesalahan saat memuat keranjang');
+        }
     }
 
     public function getItems()
@@ -100,8 +143,6 @@ class CartController extends Controller
     public function addItem(Request $request)
     {
         try {
-            \Log::info('Cart Request:', $request->all());
-
             DB::beginTransaction();
 
             $request->validate([
@@ -117,13 +158,6 @@ class CartController extends Controller
 
             $warungId = $menuItem->warung_id;
 
-            \Log::info('Found MenuItem:', [
-                'id' => $menuItem->id,
-                'name' => $menuItem->name,
-                'warung_id' => $warungId
-            ]);
-
-            // Get cart from session or create new one
             $cartId = Session::get('cart_id');
             $cart = null;
 
@@ -141,16 +175,18 @@ class CartController extends Controller
                 Session::put('cart_id', $cart->id);
             }
 
-            // Check if item exists in cart
-            $cartItem = CartItem::where('cart_id', $cart->id)
+            // Check if item already exists in cart
+            $existingItem = CartItem::where('cart_id', $cart->id)
                 ->where('menu_item_id', $menuItem->id)
                 ->first();
 
-            if ($cartItem) {
-                $cartItem->quantity += $request->quantity;
-                $cartItem->subtotal = $cartItem->price * $cartItem->quantity;
-                $cartItem->save();
+            if ($existingItem) {
+                // Update quantity jika item sudah ada
+                $existingItem->quantity = $request->quantity;
+                $existingItem->subtotal = $existingItem->price * $request->quantity;
+                $existingItem->save();
             } else {
+                // Create new cart item jika belum ada
                 CartItem::create([
                     'cart_id' => $cart->id,
                     'menu_item_id' => $menuItem->id,

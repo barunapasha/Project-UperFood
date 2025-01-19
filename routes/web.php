@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PaymentController; 
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginPage'])->name('login');
@@ -30,7 +31,7 @@ Route::post('/sign-up', [SignUpController::class, 'store'])->name('sign-up.store
 Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::get('/cart/items', [CartController::class, 'getItems'])->name('cart.items');
-Route::get('/cart/count', [CartController::class, 'getCartCount']); 
+Route::get('/cart/count', [CartController::class, 'getCartCount']);
 Route::patch('/cart/items/{id}', [CartController::class, 'updateItem'])->name('cart.update');
 Route::delete('/cart/items/{id}', [CartController::class, 'removeItem'])->name('cart.remove');
 
@@ -56,6 +57,15 @@ Route::middleware(['auth'])->group(function () {
     // Checkout Routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])
+        ->name('checkout.process')
+        ->middleware('auth');
+
+    // Payment Routes
+    Route::post('/payments/notification', [PaymentController::class, 'notification'])->name('payment.notification');
+    Route::get('/payments/complete', [PaymentController::class, 'complete'])->name('payment.complete');
+    Route::get('/payments/failed', [PaymentController::class, 'failed'])->name('payment.failed');
+    Route::get('/payments/unfinish', [PaymentController::class, 'unfinish'])->name('payment.unfinish');
 });
 
 // Admin Routes

@@ -530,6 +530,257 @@
                 }
             });
         });
+
+        // Add this to your existing script section
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
+            const searchResults = document.createElement('div');
+            searchResults.className = 'absolute w-full bg-white mt-2 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto hidden';
+            searchInput.parentNode.appendChild(searchResults);
+
+            let searchTimeout;
+
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                const query = this.value.trim();
+
+                if (query.length < 2) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+
+                        if (!response.ok) throw new Error(data.error);
+
+                        // Clear previous results
+                        searchResults.innerHTML = '';
+
+                        if (data.warungs.length === 0 && data.menuItems.length === 0) {
+                            searchResults.innerHTML = `
+                        <div class="p-4 text-gray-500 text-center">
+                            Tidak ada hasil ditemukan
+                        </div>
+                    `;
+                            searchResults.classList.remove('hidden');
+                            return;
+                        }
+
+                        // Render warung results
+                        if (data.warungs.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                        </div>
+                    `;
+                            data.warungs.forEach(warung => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${warung.id}" 
+                               class="block p-3 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center">
+                                    <img src="${warung.image}" 
+                                         class="w-12 h-12 object-cover rounded" 
+                                         alt="${warung.name}">
+                                    <div class="ml-3">
+                                        <div class="font-semibold">${warung.name}</div>
+                                        <div class="text-sm text-gray-600">${warung.location}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+
+                        // Render menu items results
+                        if (data.menuItems.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                        </div>
+                    `;
+                            data.menuItems.forEach(item => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${item.warung_slug}" 
+                               class="block p-3 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold">${item.name}</div>
+                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                    </div>
+                                    <div class="text-purple-600 font-semibold">
+                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+
+                        // Show results
+                        searchResults.classList.remove('hidden');
+
+                        // Add animation classes
+                        searchResults.classList.add('transform', 'transition-all', 'duration-300');
+                        requestAnimationFrame(() => {
+                            searchResults.style.transform = 'translateY(0)';
+                            searchResults.style.opacity = '1';
+                        });
+
+                    } catch (error) {
+                        console.error('Search error:', error);
+                        searchResults.innerHTML = `
+                    <div class="p-4 text-red-500 text-center">
+                        Terjadi kesalahan saat mencari
+                    </div>
+                `;
+                    }
+                }, 300);
+            });
+
+            // Close search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+
+            // Add some nice transitions
+            searchResults.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
+            searchResults.style.transform = 'translateY(-10px)';
+            searchResults.style.opacity = '0';
+        });
+
+        let searchTimeout;
+        const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
+        const searchResults = document.createElement('div');
+        searchResults.className = 'absolute w-full bg-white mt-2 rounded-lg shadow-xl opacity-0 transform -translate-y-4 z-50 max-h-96 overflow-y-auto';
+        searchInput.parentNode.appendChild(searchResults);
+
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+
+            // Animasi saat mulai mengetik
+            if (query.length > 0) {
+                searchInput.classList.add('ring-2', 'ring-purple-500');
+            } else {
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+                searchResults.style.opacity = '0';
+                searchResults.style.transform = 'translateY(-1rem)';
+                setTimeout(() => searchResults.innerHTML = '', 300);
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    // Clear dan hide results jika tidak ada hasil
+                    if (!data.warungs.length && !data.menuItems.length) {
+                        searchResults.innerHTML = `
+                    <div class="p-4 text-gray-500 text-center">
+                        Tidak ditemukan hasil untuk "${query}"
+                    </div>
+                `;
+                    } else {
+                        // Render hasil pencarian dengan animasi
+                        searchResults.innerHTML = `
+                    ${data.warungs.length ? `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                        </div>
+                        ${data.warungs.map((warung, index) => `
+                            <a href="/warung/${warung.id}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300 opacity-0 transform translate-y-2"
+                               style="animation: slideIn 0.3s ease-out ${index * 0.05}s forwards;">
+                                <div class="flex items-center">
+                                    <img src="${warung.image}" class="w-12 h-12 object-cover rounded" alt="${warung.name}">
+                                    <div class="ml-3">
+                                        <div class="font-semibold">${warung.name}</div>
+                                        <div class="text-sm text-gray-600">${warung.location}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('')}
+                    ` : ''}
+
+                    ${data.menuItems.length ? `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                        </div>
+                        ${data.menuItems.map((item, index) => `
+                            <a href="/warung/${item.warung_slug}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300 opacity-0 transform translate-y-2"
+                               style="animation: slideIn 0.3s ease-out ${(data.warungs.length + index) * 0.05}s forwards;">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold">${item.name}</div>
+                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                    </div>
+                                    <div class="text-purple-600 font-semibold">
+                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                    </div>
+                                </div>
+                            </a>
+                        `).join('')}
+                    ` : ''}
+                `;
+                    }
+
+                    // Show results dengan animasi
+                    searchResults.style.opacity = '1';
+                    searchResults.style.transform = 'translateY(0)';
+
+                } catch (error) {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = `
+                <div class="p-4 text-red-500 text-center">
+                    Terjadi kesalahan saat mencari
+                </div>
+            `;
+                }
+            }, 300);
+        });
+
+        const style = document.createElement('style');
+        style.textContent = `
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(1rem);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .search-results-enter {
+        opacity: 0;
+        transform: translateY(-1rem);
+    }
+
+    .search-results-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    }
+`;
+        document.head.appendChild(style);
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.opacity = '0';
+                searchResults.style.transform = 'translateY(-1rem)';
+                setTimeout(() => searchResults.innerHTML = '', 300);
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+            }
+        });
     </script>
 </body>
 
