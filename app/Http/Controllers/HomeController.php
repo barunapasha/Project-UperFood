@@ -110,8 +110,10 @@ class HomeController extends Controller
 
         try {
             // Search in warungs
-            $warungs = Warung::where('name', 'like', "%{$query}%")
-                ->orWhere('description', 'like', "%{$query}%")
+            $warungs = Warung::where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%");
+            })
                 ->get()
                 ->map(function ($warung) {
                     return [
@@ -119,41 +121,28 @@ class HomeController extends Controller
                         'name' => $warung->name,
                         'location' => $warung->location,
                         'description' => $warung->description,
-                        'type' => 'warung',
                         'image' => $this->getWarungImage($warung->name),
                         'rating' => number_format($warung->rating, 1)
                     ];
                 });
 
-            // Search in warung with menus through menu categories
-            $warungsWithMenus = Warung::whereHas('menuCategories', function ($query) use ($request) {
-                $query->whereHas('menuItems', function ($q) use ($request) {
-                    $q->where('name', 'like', '%' . $request->query . '%')
-                        ->orWhere('description', 'like', '%' . $request->query . '%');
+            // Search in menu items
+            $menuItems = \App\Models\MenuItem::with(['menuCategory.warung'])
+                ->where(function ($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%")
+                        ->orWhere('description', 'like', "%{$query}%");
+                })
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'name' => $item->name,
+                        'description' => $item->description,
+                        'price' => $item->price,
+                        'warung_name' => $item->menuCategory->warung->name,
+                        'warung_slug' => $item->menuCategory->warung->slug
+                    ];
                 });
-            })
-                ->with(['menuCategories.menuItems' => function ($query) use ($request) {
-                    $query->where('name', 'like', '%' . $request->query . '%')
-                        ->orWhere('description', 'like', '%' . $request->query . '%');
-                }])
-                ->get();
-
-            $menuItems = collect();
-            foreach ($warungsWithMenus as $warung) {
-                foreach ($warung->menuCategories as $category) {
-                    foreach ($category->menuItems as $item) {
-                        $menuItems->push([
-                            'id' => $item->id,
-                            'name' => $item->name,
-                            'description' => $item->description,
-                            'type' => 'menu',
-                            'price' => $item->price,
-                            'warung_name' => $warung->name,
-                            'warung_slug' => $warung->slug
-                        ]);
-                    }
-                }
-            }
 
             return response()->json([
                 'warungs' => $warungs,
@@ -161,9 +150,11 @@ class HomeController extends Controller
             ]);
         } catch (\Exception $e) {
             \Log::error('Search Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return response()->json([
                 'error' => true,
-                'message' => 'Terjadi kesalahan saat mencari'
+                'message' => 'Terjadi kesalahan saat mencari: ' . $e->getMessage()
             ], 500);
         }
     }

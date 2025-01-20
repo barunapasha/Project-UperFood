@@ -324,6 +324,143 @@
     </footer>
 
     <script>
+        // ============ SEARCH FUNCTIONALITY ============
+        const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
+        const searchResults = document.createElement('div');
+        searchResults.className = 'absolute w-full mt-2 bg-white rounded-lg shadow-lg z-50 hidden overflow-y-auto max-h-[80vh]';
+        searchResults.style.top = '100%';
+        searchInput.parentNode.appendChild(searchResults);
+
+        let debounceTimer;
+        let currentSearchRequest = null;
+
+        // Search input handler
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(debounceTimer);
+
+            if (currentSearchRequest) {
+                currentSearchRequest.abort();
+            }
+
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+                return;
+            }
+
+            searchInput.classList.add('ring-2', 'ring-purple-500');
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const controller = new AbortController();
+                    currentSearchRequest = controller;
+
+                    searchResults.classList.remove('hidden');
+                    searchResults.innerHTML = '<div class="p-4 text-center"><div class="animate-spin inline-block w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full"></div></div>';
+
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`, {
+                        signal: controller.signal
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) throw new Error(data.error);
+
+                    searchResults.innerHTML = '';
+
+                    if (data.warungs.length === 0 && data.menuItems.length === 0) {
+                        searchResults.innerHTML = `
+                    <div class="p-4 text-gray-500 text-center">
+                        Tidak ada hasil untuk "${query}"
+                    </div>
+                `;
+                    } else {
+                        if (data.warungs.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                        </div>
+                    `;
+
+                            data.warungs.forEach(warung => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${warung.id}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center">
+                                    <img src="${warung.image}" 
+                                         class="w-12 h-12 object-cover rounded" 
+                                         alt="${warung.name}">
+                                    <div class="ml-3">
+                                        <div class="font-semibold">${warung.name}</div>
+                                        <div class="text-sm text-gray-600">${warung.location}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+
+                        if (data.menuItems.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                        </div>
+                    `;
+
+                            data.menuItems.forEach(item => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${item.warung_slug}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold">${item.name}</div>
+                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                    </div>
+                                    <div class="text-purple-600 font-semibold">
+                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+                    }
+
+                    searchResults.style.display = 'block';
+                } catch (error) {
+                    if (error.name === 'AbortError') return;
+
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = `
+                <div class="p-4 text-red-500 text-center">
+                    Terjadi kesalahan saat mencari
+                </div>
+            `;
+                }
+            }, 300);
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+                searchInput.blur();
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             // Add initial opacity of 0 to prevent flash
             document.body.style.opacity = '0';

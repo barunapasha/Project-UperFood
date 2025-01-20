@@ -12,7 +12,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController; 
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ChatController;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginPage'])->name('login');
@@ -27,19 +28,16 @@ Route::get('/information', [PageController::class, 'information'])->name('inform
 Route::get('/sign-up', [SignUpController::class, 'show'])->name('sign-up');
 Route::post('/sign-up', [SignUpController::class, 'store'])->name('sign-up.store');
 
-// Cart Routes (accessible for guests)
-Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-Route::get('/cart/items', [CartController::class, 'getItems'])->name('cart.items');
-Route::get('/cart/count', [CartController::class, 'getCartCount']);
-Route::patch('/cart/items/{id}', [CartController::class, 'updateItem'])->name('cart.update');
-Route::delete('/cart/items/{id}', [CartController::class, 'removeItem'])->name('cart.remove');
+
 
 Route::middleware(['auth'])->group(function () {
     // Home & Profile
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::get('/search', [HomeController::class, 'search'])->name('search');
+
+    Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 
     // Warung Routes
     Route::get('/warung/kantin-atas', [WarungController::class, 'kantinAtas'])->name('kantin-atas');
@@ -54,6 +52,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/category/bestseller', 'bestseller')->name('category.bestseller');
     });
 
+    // Cart Routes
+    Route::post('/cart/items', [CartController::class, 'addItem'])->name('cart.add');
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/cart/items', [CartController::class, 'getItems'])->name('cart.items');
+    Route::get('/cart/count', [CartController::class, 'getCartCount']);
+    Route::patch('/cart/items/{id}', [CartController::class, 'updateItem'])->name('cart.update');
+    Route::delete('/cart/items/{id}', [CartController::class, 'removeItem'])->name('cart.remove');
+
     // Checkout Routes
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout.process');
@@ -66,6 +72,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payments/complete', [PaymentController::class, 'complete'])->name('payment.complete');
     Route::get('/payments/failed', [PaymentController::class, 'failed'])->name('payment.failed');
     Route::get('/payments/unfinish', [PaymentController::class, 'unfinish'])->name('payment.unfinish');
+
+    // Chat Routes
+    Route::get('/chat/users', [ChatController::class, 'getUsers']);
+    Route::get('/chat/messages/{user}', [ChatController::class, 'getMessages']);
+    Route::post('/chat/send/{user}', [ChatController::class, 'sendMessage']);
+    Route::post('/chat/mark-read/{user}', [ChatController::class, 'markAsRead']);
 });
 
 // Admin Routes

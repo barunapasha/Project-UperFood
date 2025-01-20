@@ -21,13 +21,12 @@
 
                 <div class="flex-1 mx-8">
                     <div class="relative">
-                        <input type="text" placeholder="Cari makanan atau warung"
+                        <input type="text"
+                            placeholder="Cari makanan atau warung"
                             class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-full">
                         <span class="absolute left-3 top-2.5 text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                    clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
                         </span>
                     </div>
@@ -67,6 +66,21 @@
         <div class="mb-8">
             <h1 class="text-3xl font-bold mb-2">{{ $title }}</h1>
             <p class="text-gray-600">{{ $description }}</p>
+        </div>
+
+        <div class="container mx-auto px-4 py-4">
+            <a href="{{ route('home') }}"
+                class="inline-flex items-center text-purple-600 hover:text-purple-700 transition-colors duration-200 group">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-200"
+                    viewBox="0 0 20 20"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                        clip-rule="evenodd" />
+                </svg>
+                Kembali ke Beranda
+            </a>
         </div>
 
         <!-- Warung Grid -->
@@ -163,7 +177,144 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        // ============ SEARCH FUNCTIONALITY ============
+        const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
+        const searchResults = document.createElement('div');
+        searchResults.className = 'absolute w-full mt-2 bg-white rounded-lg shadow-lg z-50 hidden overflow-y-auto max-h-[80vh]';
+        searchResults.style.top = '100%';
+        searchInput.parentNode.appendChild(searchResults);
+
+        let debounceTimer;
+        let currentSearchRequest = null;
+
+        // Search input handler
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(debounceTimer);
+
+            if (currentSearchRequest) {
+                currentSearchRequest.abort();
+            }
+
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+                return;
+            }
+
+            searchInput.classList.add('ring-2', 'ring-purple-500');
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const controller = new AbortController();
+                    currentSearchRequest = controller;
+
+                    searchResults.classList.remove('hidden');
+                    searchResults.innerHTML = '<div class="p-4 text-center"><div class="animate-spin inline-block w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full"></div></div>';
+
+                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`, {
+                        signal: controller.signal
+                    });
+                    const data = await response.json();
+
+                    if (!response.ok) throw new Error(data.error);
+
+                    searchResults.innerHTML = '';
+
+                    if (data.warungs.length === 0 && data.menuItems.length === 0) {
+                        searchResults.innerHTML = `
+                    <div class="p-4 text-gray-500 text-center">
+                        Tidak ada hasil untuk "${query}"
+                    </div>
+                `;
+                    } else {
+                        if (data.warungs.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                        </div>
+                    `;
+
+                            data.warungs.forEach(warung => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${warung.id}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center">
+                                    <img src="${warung.image}" 
+                                         class="w-12 h-12 object-cover rounded" 
+                                         alt="${warung.name}">
+                                    <div class="ml-3">
+                                        <div class="font-semibold">${warung.name}</div>
+                                        <div class="text-sm text-gray-600">${warung.location}</div>
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+
+                        if (data.menuItems.length > 0) {
+                            searchResults.innerHTML += `
+                        <div class="p-2 bg-gray-50">
+                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                        </div>
+                    `;
+
+                            data.menuItems.forEach(item => {
+                                searchResults.innerHTML += `
+                            <a href="/warung/${item.warung_slug}" 
+                               class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-semibold">${item.name}</div>
+                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                    </div>
+                                    <div class="text-purple-600 font-semibold">
+                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                    </div>
+                                </div>
+                            </a>
+                        `;
+                            });
+                        }
+                    }
+
+                    searchResults.style.display = 'block';
+                } catch (error) {
+                    if (error.name === 'AbortError') return;
+
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = `
+                <div class="p-4 text-red-500 text-center">
+                    Terjadi kesalahan saat mencari
+                </div>
+            `;
+                }
+            }, 300);
+        });
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchResults.innerHTML = '';
+                searchResults.classList.add('hidden');
+                searchInput.classList.remove('ring-2', 'ring-purple-500');
+                searchInput.blur();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
             const grid = document.getElementById('warungGrid');
             const cards = document.querySelectorAll('.warung-card');
 

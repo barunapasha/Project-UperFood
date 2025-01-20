@@ -19,4 +19,19 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Chat::class, 'sender_id');
+    }
+
+    public function receivedMessages()
+    {
+        return $this->hasMany(Chat::class, 'receiver_id');
+    }
+
+    public function unreadMessages()
+    {
+        return $this->receivedMessages()->where('is_read', false);
+    }
 }

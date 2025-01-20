@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>UperFood - Universitas Pertamina</title>
     @vite('resources/css/app.css')
 </head>
@@ -16,7 +17,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <a href="{{ route('home') }}" class="hover:opacity-80 transition">
-                        <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood" style="height:7rem">
+                        <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood" style="height:8rem">
                     </a>
                 </div>
 
@@ -243,6 +244,49 @@
         </div>
     </div>
 
+    <!-- Chat Button with Notification Badge -->
+    <div id="chatButton" class="fixed bottom-8 right-8 z-50">
+        <button onclick="toggleChat()" class="bg-purple-500 hover:bg-purple-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group relative">
+            <span id="unreadBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden transition-opacity duration-300">
+        <div class="absolute bottom-24 right-8 w-96 bg-white rounded-lg shadow-xl transform transition-transform duration-300 scale-95 opacity-0" id="chatContainer">
+            <!-- Chat Header -->
+            <div class="bg-purple-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+                <h3 class="font-semibold flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                    </svg>
+                    Chat
+                </h3>
+                <button onclick="toggleChat()" class="hover:text-gray-200 transform hover:rotate-90 transition-transform">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="chatUsersList" class="h-96 overflow-y-auto divide-y"></div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden h-96 flex items-center justify-center">
+                <div class="text-center text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <p class="text-lg font-medium">Tidak ada pesan</p>
+                    <p class="text-sm">Mulai chat dengan sesama pengguna</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer yang diperbarui -->
     <footer class="bg-purple-500 text-white py-12 mt-16">
         <div class="container mx-auto px-4">
@@ -268,7 +312,7 @@
                     <img src="{{ asset('images/logo-uperfood-white.png') }}"
                         alt="UperFood"
                         class="mb-4 transform hover:scale-105 transition-transform duration-300"
-                        style="height:9rem">
+                        style="height:12rem">
                     <div class="flex space-x-4 mt-4">
                         <a href="#" class="hover:text-purple-200 transition-colors">
                             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -304,43 +348,6 @@
     </footer>
 
     <script>
-        const featuredSection = document.getElementById('featuredCategories');
-        if (featuredSection) {
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '50px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.transition = 'all 0.5s ease-out';
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-
-                        // Animate cards
-                        const cards = entry.target.querySelectorAll('.featured-card');
-                        cards.forEach((card, index) => {
-                            setTimeout(() => {
-                                card.style.opacity = '1';
-                                card.style.transform = 'translateY(0)';
-                            }, index * 100);
-                        });
-                    }
-                });
-            }, observerOptions);
-
-            // Initialize cards with starting styles
-            const cards = featuredSection.querySelectorAll('.featured-card');
-            cards.forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'all 0.3s ease-out';
-            });
-
-            observer.observe(featuredSection);
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             // Initial page fade in
             document.body.style.opacity = '0';
@@ -349,287 +356,114 @@
                 document.body.style.opacity = '1';
             }, 0);
 
-            // Observer setup for sections
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '50px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-
-                        // Animate cards within the section
-                        const cards = entry.target.querySelectorAll('.warung-card');
-                        cards.forEach((card, index) => {
-                            setTimeout(() => {
-                                card.style.opacity = '1';
-                                card.style.transform = 'translateY(0)';
-                            }, index * 100);
-                        });
-                    }
-                });
-            }, observerOptions);
-
-            // Initialize all cards with starting styles
-            document.querySelectorAll('.warung-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'all 0.3s ease-out';
-
-                // Add consistent hover effects
-                card.addEventListener('mouseenter', function() {
-                    this.querySelector('img').style.transform = 'scale(1.1)';
-                    this.querySelector('.bg-white').style.transform = 'translateY(-8px)';
-                    this.querySelector('.bg-white').style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    this.querySelector('img').style.transform = 'scale(1)';
-                    this.querySelector('.bg-white').style.transform = 'translateY(0)';
-                    this.querySelector('.bg-white').style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
-                });
-            });
-
-            // Observe sections
-            document.querySelectorAll('#kantinAtas, #kantinBawah').forEach(section => {
-                observer.observe(section);
-            });
-
-            // Add required styles
-            const style = document.createElement('style');
-            style.textContent = `
-        .warung-card {
-            transition: all 0.3s ease-out;
-        }
-        .warung-card img {
-            transition: transform 0.3s ease-out;
-        }
-        .warung-card .bg-white {
-            transition: all 0.3s ease-out;
-        }
-    `;
-            document.head.appendChild(style);
-        });
-
-        // Add this JavaScript to the existing script section in home.blade.php
-
-        // Create a debounce function to limit API calls
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
-        // Add search functionality
-        document.addEventListener('DOMContentLoaded', function() {
+            // ============ SEARCH FUNCTIONALITY ============
             const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
             const searchResults = document.createElement('div');
-            searchResults.className = 'absolute w-full mt-2 bg-white rounded-lg shadow-lg z-50 hidden';
+            searchResults.className = 'absolute w-full mt-2 bg-white rounded-lg shadow-lg z-50 hidden overflow-y-auto max-h-[80vh]';
+            searchResults.style.top = '100%';
             searchInput.parentNode.appendChild(searchResults);
 
-            const performSearch = debounce(async (query) => {
-                if (query.length < 2) {
-                    searchResults.classList.add('hidden');
-                    return;
-                }
+            let debounceTimer;
+            let currentSearchRequest = null;
 
-                try {
-                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-
-                    if (!response.ok) throw new Error(data.error);
-
-                    // Clear previous results
-                    searchResults.innerHTML = '';
-
-                    // Display results
-                    if (data.warungs.length === 0 && data.menuItems.length === 0) {
-                        searchResults.innerHTML = `
-                    <div class="p-4 text-gray-500 text-center">
-                        Tidak ada hasil ditemukan
-                    </div>
-                `;
-                    } else {
-                        // Warung results
-                        if (data.warungs.length > 0) {
-                            searchResults.innerHTML += `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
-                        </div>
-                    `;
-                            data.warungs.forEach(warung => {
-                                searchResults.innerHTML += `
-                            <a href="/warung/${warung.id}" class="block p-3 hover:bg-gray-50">
-                                <div class="flex items-center">
-                                    <img src="${warung.image}" class="w-12 h-12 object-cover rounded" alt="${warung.name}">
-                                    <div class="ml-3">
-                                        <div class="font-semibold">${warung.name}</div>
-                                        <div class="text-sm text-gray-600">${warung.location}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        `;
-                            });
-                        }
-
-                        // Menu items results
-                        if (data.menuItems.length > 0) {
-                            searchResults.innerHTML += `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
-                        </div>
-                    `;
-                            data.menuItems.forEach(item => {
-                                searchResults.innerHTML += `
-                            <a href="/warung/${item.warung_slug}" class="block p-3 hover:bg-gray-50">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="font-semibold">${item.name}</div>
-                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
-                                    </div>
-                                    <div class="text-purple-600 font-semibold">
-                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
-                                    </div>
-                                </div>
-                            </a>
-                        `;
-                            });
-                        }
-                    }
-
-                    searchResults.classList.remove('hidden');
-                } catch (error) {
-                    console.error('Search error:', error);
-                    searchResults.innerHTML = `
-                <div class="p-4 text-red-500 text-center">
-                    Terjadi kesalahan saat mencari
-                </div>
-            `;
-                }
-            }, 300);
-
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.trim();
-                performSearch(query);
-            });
-
-            // Close search results when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.classList.add('hidden');
-                }
-            });
-        });
-
-        // Add this to your existing script section
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
-            const searchResults = document.createElement('div');
-            searchResults.className = 'absolute w-full bg-white mt-2 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto hidden';
-            searchInput.parentNode.appendChild(searchResults);
-
-            let searchTimeout;
-
+            // Search input handler
             searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
                 const query = this.value.trim();
 
+                clearTimeout(debounceTimer);
+
+                if (currentSearchRequest) {
+                    currentSearchRequest.abort();
+                }
+
                 if (query.length < 2) {
+                    searchResults.innerHTML = '';
                     searchResults.classList.add('hidden');
+                    searchInput.classList.remove('ring-2', 'ring-purple-500');
                     return;
                 }
 
-                searchTimeout = setTimeout(async () => {
+                searchInput.classList.add('ring-2', 'ring-purple-500');
+
+                debounceTimer = setTimeout(async () => {
                     try {
-                        const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                        const controller = new AbortController();
+                        currentSearchRequest = controller;
+
+                        searchResults.classList.remove('hidden');
+                        searchResults.innerHTML = '<div class="p-4 text-center"><div class="animate-spin inline-block w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full"></div></div>';
+
+                        const response = await fetch(`/search?query=${encodeURIComponent(query)}`, {
+                            signal: controller.signal
+                        });
                         const data = await response.json();
 
                         if (!response.ok) throw new Error(data.error);
 
-                        // Clear previous results
                         searchResults.innerHTML = '';
 
                         if (data.warungs.length === 0 && data.menuItems.length === 0) {
                             searchResults.innerHTML = `
                         <div class="p-4 text-gray-500 text-center">
-                            Tidak ada hasil ditemukan
+                            Tidak ada hasil untuk "${query}"
                         </div>
                     `;
-                            searchResults.classList.remove('hidden');
-                            return;
-                        }
-
-                        // Render warung results
-                        if (data.warungs.length > 0) {
-                            searchResults.innerHTML += `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
-                        </div>
-                    `;
-                            data.warungs.forEach(warung => {
+                        } else {
+                            if (data.warungs.length > 0) {
                                 searchResults.innerHTML += `
-                            <a href="/warung/${warung.id}" 
-                               class="block p-3 hover:bg-gray-50 transition-all duration-300">
-                                <div class="flex items-center">
-                                    <img src="${warung.image}" 
-                                         class="w-12 h-12 object-cover rounded" 
-                                         alt="${warung.name}">
-                                    <div class="ml-3">
-                                        <div class="font-semibold">${warung.name}</div>
-                                        <div class="text-sm text-gray-600">${warung.location}</div>
-                                    </div>
-                                </div>
-                            </a>
+                            <div class="p-2 bg-gray-50">
+                                <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
+                            </div>
                         `;
-                            });
-                        }
 
-                        // Render menu items results
-                        if (data.menuItems.length > 0) {
-                            searchResults.innerHTML += `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
-                        </div>
-                    `;
-                            data.menuItems.forEach(item => {
+                                data.warungs.forEach(warung => {
+                                    searchResults.innerHTML += `
+                                <a href="/warung/${warung.id}" 
+                                   class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                    <div class="flex items-center">
+                                        <img src="${warung.image}" 
+                                             class="w-12 h-12 object-cover rounded" 
+                                             alt="${warung.name}">
+                                        <div class="ml-3">
+                                            <div class="font-semibold">${warung.name}</div>
+                                            <div class="text-sm text-gray-600">${warung.location}</div>
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                                });
+                            }
+
+                            if (data.menuItems.length > 0) {
                                 searchResults.innerHTML += `
-                            <a href="/warung/${item.warung_slug}" 
-                               class="block p-3 hover:bg-gray-50 transition-all duration-300">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="font-semibold">${item.name}</div>
-                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
-                                    </div>
-                                    <div class="text-purple-600 font-semibold">
-                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
-                                    </div>
-                                </div>
-                            </a>
+                            <div class="p-2 bg-gray-50">
+                                <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
+                            </div>
                         `;
-                            });
+
+                                data.menuItems.forEach(item => {
+                                    searchResults.innerHTML += `
+                                <a href="/warung/${item.warung_slug}" 
+                                   class="block p-4 hover:bg-gray-50 transition-all duration-300">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="font-semibold">${item.name}</div>
+                                            <div class="text-sm text-gray-600">${item.warung_name}</div>
+                                        </div>
+                                        <div class="text-purple-600 font-semibold">
+                                            Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                                });
+                            }
                         }
 
-                        // Show results
-                        searchResults.classList.remove('hidden');
-
-                        // Add animation classes
-                        searchResults.classList.add('transform', 'transition-all', 'duration-300');
-                        requestAnimationFrame(() => {
-                            searchResults.style.transform = 'translateY(0)';
-                            searchResults.style.opacity = '1';
-                        });
-
+                        searchResults.style.display = 'block';
                     } catch (error) {
+                        if (error.name === 'AbortError') return;
+
                         console.error('Search error:', error);
                         searchResults.innerHTML = `
                     <div class="p-4 text-red-500 text-center">
@@ -643,143 +477,335 @@
             // Close search results when clicking outside
             document.addEventListener('click', (e) => {
                 if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.innerHTML = '';
                     searchResults.classList.add('hidden');
+                    searchInput.classList.remove('ring-2', 'ring-purple-500');
                 }
             });
 
-            // Add some nice transitions
-            searchResults.style.transition = 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out';
-            searchResults.style.transform = 'translateY(-10px)';
-            searchResults.style.opacity = '0';
-        });
+            // Handle escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchResults.innerHTML = '';
+                    searchResults.classList.add('hidden');
+                    searchInput.classList.remove('ring-2', 'ring-purple-500');
+                    searchInput.blur();
+                }
+            });
 
-        let searchTimeout;
-        const searchInput = document.querySelector('input[placeholder="Cari makanan atau warung"]');
-        const searchResults = document.createElement('div');
-        searchResults.className = 'absolute w-full bg-white mt-2 rounded-lg shadow-xl opacity-0 transform -translate-y-4 z-50 max-h-96 overflow-y-auto';
-        searchInput.parentNode.appendChild(searchResults);
+            // ============ CHAT FUNCTIONALITY ============
+            let activeChat = null;
+            let pollingInterval = null;
 
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            const query = this.value.trim();
+            window.toggleChat = function() {
+                const modal = document.getElementById('chatModal');
+                const container = document.getElementById('chatContainer');
 
-            // Animasi saat mulai mengetik
-            if (query.length > 0) {
-                searchInput.classList.add('ring-2', 'ring-purple-500');
-            } else {
-                searchInput.classList.remove('ring-2', 'ring-purple-500');
-                searchResults.style.opacity = '0';
-                searchResults.style.transform = 'translateY(-1rem)';
-                setTimeout(() => searchResults.innerHTML = '', 300);
-                return;
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        container.style.transform = 'scale(1)';
+                        container.style.opacity = '1';
+                    }, 10);
+                    loadUsers();
+                } else {
+                    container.style.transform = 'scale(0.95)';
+                    container.style.opacity = '0';
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 300);
+                    if (pollingInterval) clearInterval(pollingInterval);
+                }
             }
 
-            searchTimeout = setTimeout(async () => {
+            window.loadUsers = async function() {
                 try {
-                    const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
-                    const data = await response.json();
+                    const response = await fetch('/chat/users');
+                    const users = await response.json();
+                    const usersList = document.getElementById('chatUsersList');
 
-                    // Clear dan hide results jika tidak ada hasil
-                    if (!data.warungs.length && !data.menuItems.length) {
-                        searchResults.innerHTML = `
-                    <div class="p-4 text-gray-500 text-center">
-                        Tidak ditemukan hasil untuk "${query}"
+                    if (users.length === 0) {
+                        usersList.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <p>Tidak ada pengguna yang tersedia</p>
                     </div>
                 `;
-                    } else {
-                        // Render hasil pencarian dengan animasi
-                        searchResults.innerHTML = `
-                    ${data.warungs.length ? `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Warung</h3>
-                        </div>
-                        ${data.warungs.map((warung, index) => `
-                            <a href="/warung/${warung.id}" 
-                               class="block p-4 hover:bg-gray-50 transition-all duration-300 opacity-0 transform translate-y-2"
-                               style="animation: slideIn 0.3s ease-out ${index * 0.05}s forwards;">
-                                <div class="flex items-center">
-                                    <img src="${warung.image}" class="w-12 h-12 object-cover rounded" alt="${warung.name}">
-                                    <div class="ml-3">
-                                        <div class="font-semibold">${warung.name}</div>
-                                        <div class="text-sm text-gray-600">${warung.location}</div>
-                                    </div>
-                                </div>
-                            </a>
-                        `).join('')}
-                    ` : ''}
-
-                    ${data.menuItems.length ? `
-                        <div class="p-2 bg-gray-50">
-                            <h3 class="text-sm font-semibold text-gray-600 px-2">Menu</h3>
-                        </div>
-                        ${data.menuItems.map((item, index) => `
-                            <a href="/warung/${item.warung_slug}" 
-                               class="block p-4 hover:bg-gray-50 transition-all duration-300 opacity-0 transform translate-y-2"
-                               style="animation: slideIn 0.3s ease-out ${(data.warungs.length + index) * 0.05}s forwards;">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="font-semibold">${item.name}</div>
-                                        <div class="text-sm text-gray-600">${item.warung_name}</div>
-                                    </div>
-                                    <div class="text-purple-600 font-semibold">
-                                        Rp ${new Intl.NumberFormat('id-ID').format(item.price)}
-                                    </div>
-                                </div>
-                            </a>
-                        `).join('')}
-                    ` : ''}
-                `;
+                        return;
                     }
 
-                    // Show results dengan animasi
-                    searchResults.style.opacity = '1';
-                    searchResults.style.transform = 'translateY(0)';
-
+                    usersList.innerHTML = users.map(user => `
+                <div onclick="openChat(${user.id})" 
+                     class="p-4 hover:bg-gray-50 cursor-pointer flex items-center space-x-3 border-b transition-colors duration-200">
+                    <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        ${user.name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold">${user.name}</h4>
+                        <p class="text-sm text-gray-500">${user.email}</p>
+                    </div>
+                    ${user.received_messages_count > 0 ? `
+                        <div class="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            ${user.received_messages_count}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
                 } catch (error) {
-                    console.error('Search error:', error);
-                    searchResults.innerHTML = `
-                <div class="p-4 text-red-500 text-center">
-                    Terjadi kesalahan saat mencari
+                    console.error('Error loading users:', error);
+                }
+            }
+
+            window.openChat = async function(userId) {
+                activeChat = userId;
+                const usersList = document.getElementById('chatUsersList');
+
+                try {
+                    const response = await fetch(`/chat/messages/${userId}`);
+                    const messages = await response.json();
+
+                    usersList.innerHTML = `
+                <div class="flex flex-col h-full">
+                    <!-- Back button -->
+                    <div class="p-4 border-b flex items-center space-x-3">
+                        <button onclick="loadUsers()" class="hover:text-purple-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <span class="font-semibold">Kembali ke Daftar Chat</span>
+                    </div>
+                    
+                    <!-- Messages container -->
+                    <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white"></div>
+                    
+                    <!-- Input area -->
+                    <div class="p-4 border-t">
+                        <div class="flex space-x-2">
+                            <input type="text" 
+                                   id="messageInput"
+                                   placeholder="Ketik pesan..."
+                                   class="flex-1 px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <button onclick="sendMessage()"
+                                    class="bg-fuchsia-500 text-white rounded-full p-2 hover:bg-fuchsia-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
+
+                    displayMessages(messages);
+
+                    const messageInput = document.getElementById('messageInput');
+                    messageInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                        }
+                    });
+
+                    await fetch(`/chat/mark-read/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    startPolling();
+                } catch (error) {
+                    console.error('Error opening chat:', error);
                 }
-            }, 300);
-        });
-
-        const style = document.createElement('style');
-        style.textContent = `
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(1rem);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .search-results-enter {
-        opacity: 0;
-        transform: translateY(-1rem);
-    }
-
-    .search-results-enter-active {
-        opacity: 1;
-        transform: translateY(0);
-        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-    }
-`;
-        document.head.appendChild(style);
-
-        // Close search results when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.style.opacity = '0';
-                searchResults.style.transform = 'translateY(-1rem)';
-                setTimeout(() => searchResults.innerHTML = '', 300);
-                searchInput.classList.remove('ring-2', 'ring-purple-500');
             }
+
+            function displayMessages(messages) {
+                const chatMessages = document.getElementById('chatMessages');
+                const currentUserId = {{ Auth::id() }};
+
+                if (!chatMessages) return;
+
+                chatMessages.innerHTML = messages.map(message => {
+                    const isSender = message.sender_id === currentUserId;
+                    const initials = message.sender_name?.substring(0, 2) || 'U';
+                    const time = new Date(message.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    return `
+            <div class="flex ${isSender ? 'justify-end' : 'justify-start'} mb-4">
+                ${!isSender ? `
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                        <span class="text-xs font-medium text-gray-600">${initials}</span>
+                    </div>
+                ` : ''}
+                
+                <div class="max-w-[70%] relative group">
+                    <div class="${isSender 
+                        ? 'bg-purple-500 text-white rounded-t-xl rounded-l-xl rounded-br-sm' 
+                        : 'bg-fuchsia-100 text-gray-800 rounded-t-xl rounded-r-xl rounded-bl-sm'} 
+                        px-4 py-2 shadow-sm">
+                        <p class="break-words text-sm">${message.message}</p>
+                        <p class="text-[10px] mt-1 ${isSender ? 'text-purple-200' : 'text-gray-500'}">
+                            ${time}
+                        </p>
+                    </div>
+                </div>
+
+                ${isSender ? `
+                    <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center ml-2">
+                        <span class="text-xs font-medium text-white">${initials}</span>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+                }).join('');
+
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }   
+
+            window.sendMessage = async function() {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+
+                if (!message || !activeChat) return;
+
+                try {
+                    const response = await fetch(`/chat/send/${activeChat}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({
+                            message
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('Failed to send message');
+
+                    input.value = '';
+
+                    const messagesResponse = await fetch(`/chat/messages/${activeChat}`);
+                    const messages = await messagesResponse.json();
+                    displayMessages(messages);
+
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+
+            function startPolling() {
+                if (pollingInterval) clearInterval(pollingInterval);
+
+                pollingInterval = setInterval(async () => {
+                    if (!activeChat) return;
+
+                    try {
+                        const response = await fetch(`/chat/messages/${activeChat}`);
+                        const messages = await response.json();
+                        displayMessages(messages);
+                    } catch (error) {
+                        console.error('Error polling messages:', error);
+                    }
+                }, 5000);
+            }
+
+            // Section and Card Animations
+            const featuredSection = document.getElementById('featuredCategories');
+            if (featuredSection) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.transition = 'all 0.5s ease-out';
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+
+                            const cards = entry.target.querySelectorAll('.featured-card');
+                            cards.forEach((card, index) => {
+                                setTimeout(() => {
+                                    card.style.opacity = '1';
+                                    card.style.transform = 'translateY(0)';
+                                }, index * 100);
+                            });
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '50px'
+                });
+
+                // Initialize featured cards
+                const cards = featuredSection.querySelectorAll('.featured-card');
+                cards.forEach(card => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.3s ease-out';
+                });
+
+                observer.observe(featuredSection);
+            }
+
+            // Warung sections animation
+            const kantinSections = document.querySelectorAll('#kantinAtas, #kantinBawah');
+            kantinSections.forEach(section => {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            entry.target.style.opacity = '1';
+                            entry.target.style.transform = 'translateY(0)';
+
+                            const cards = entry.target.querySelectorAll('.warung-card');
+                            cards.forEach((card, index) => {
+                                setTimeout(() => {
+                                    card.style.opacity = '1';
+                                    card.style.transform = 'translateY(0)';
+                                }, index * 100);
+                            });
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '50px'
+                });
+
+                observer.observe(section);
+            });
+
+            // Initialize warung cards
+            document.querySelectorAll('.warung-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'all 0.3s ease-out';
+
+                // Add hover effects
+                card.addEventListener('mouseenter', function() {
+                    const img = this.querySelector('img');
+                    const container = this.querySelector('.bg-white');
+                    if (img) img.style.transform = 'scale(1.1)';
+                    if (container) {
+                        container.style.transform = 'translateY(-8px)';
+                        container.style.boxShadow = '0 10px 20px rgba(0, 0, 0, 0.1)';
+                    }
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    const img = this.querySelector('img');
+                    const container = this.querySelector('.bg-white');
+                    if (img) img.style.transform = 'scale(1)';
+                    if (container) {
+                        container.style.transform = 'translateY(0)';
+                        container.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                    }
+                });
+            });
+
+            // Clean up when leaving the page
+            window.addEventListener('beforeunload', () => {
+                if (pollingInterval) clearInterval(pollingInterval);
+            });
         });
     </script>
 </body>

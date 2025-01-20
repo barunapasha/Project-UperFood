@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - UperFood</title>
     @vite('resources/css/app.css')
 </head>
+
 <body class="flex flex-col min-h-screen bg-gray-50">
     <!-- Navbar -->
     <nav class="bg-white shadow-sm">
@@ -16,12 +18,12 @@
                         <img src="{{ asset('images/logo-uperfood-blue.png') }}" alt="UperFood" style="height:7rem">
                     </a>
                 </div>
-                
+
                 <div class="flex-1 mx-8">
                     <div class="relative">
-                        <input type="text" 
-                               placeholder="Cari makanan atau warung" 
-                               class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-full">
+                        <input type="text"
+                            placeholder="Cari makanan atau warung"
+                            class="w-full px-4 py-2 pl-10 bg-gray-100 rounded-full">
                         <span class="absolute left-3 top-2.5 text-gray-400">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -76,9 +78,9 @@
                 <div class="p-4 border-b">
                     <h2 class="text-lg font-semibold text-gray-800">Pengaturan Akun</h2>
                 </div>
-                
+
                 <div class="divide-y">
-                    <a href="#" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                    <a href="#" onclick="toggleEditProfileModal()" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
                         <div class="flex items-center space-x-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -90,7 +92,7 @@
                         </svg>
                     </a>
 
-                    <a href="#" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+                    <a href="#" onclick="toggleChangePasswordModal()" class="flex items-center justify-between p-4 hover:bg-gray-50 transition">
                         <div class="flex items-center space-x-3">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -118,14 +120,116 @@
         </div>
     </main>
 
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-md p-6 relative">
+                <button onclick="toggleEditProfileModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <h2 class="text-xl font-bold mb-6">Edit Profile</h2>
+
+                <form action="{{ route('profile.update') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="name">
+                            Nama
+                        </label>
+                        <input type="text" name="name" id="name" value="{{ $user->name }}" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="email">
+                            Email
+                        </label>
+                        <input type="email" name="email" id="email" value="{{ $user->email }}" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="toggleEditProfileModal()"
+                            class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg w-full max-w-md p-6 relative">
+                <button onclick="toggleChangePasswordModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <h2 class="text-xl font-bold mb-6">Ubah Password</h2>
+
+                <form action="{{ route('profile.update-password') }}" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="current_password">
+                            Password Saat Ini
+                        </label>
+                        <input type="password" name="current_password" id="current_password" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="password">
+                            Password Baru
+                        </label>
+                        <input type="password" name="password" id="password" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-medium mb-2" for="password_confirmation">
+                            Konfirmasi Password Baru
+                        </label>
+                        <input type="password" name="password_confirmation" id="password_confirmation" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="toggleChangePasswordModal()"
+                            class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-purple-500 text-white py-8 mt-auto">
         <div class="container mx-auto grid grid-cols-3 gap-8 px-4">
             <div>
                 <h3 class="font-bold mb-4">Universitas Pertamina</h3>
                 <p>Jl. Teuku Nyak Arief, Simprug,<br>
-                   Kec. Kby. Lama, Kota Jakarta Selatan,<br>
-                   Daerah Khusus Ibukota Jakarta</p>
+                    Kec. Kby. Lama, Kota Jakarta Selatan,<br>
+                    Daerah Khusus Ibukota Jakarta</p>
             </div>
             <div class="flex justify-center">
                 <img src="{{ asset('images/logo-uperfood-white.png') }}" alt="UperFood" style="height: 9rem;">
@@ -207,7 +311,6 @@
                 modal.style.transition = 'opacity 0.3s ease-in';
                 modal.style.opacity = '1';
             }, 0);
-            // ... rest of the existing openAddModal logic ...
         }
 
         function closeModal() {
@@ -253,6 +356,41 @@
                 }
             });
         });
+
+        function toggleEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('name').focus();
+            }
+        }
+
+        function toggleChangePasswordModal() {
+            const modal = document.getElementById('changePasswordModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('current_password').focus();
+            }
+        }
+
+        // Close modals when clicking outside
+        document.querySelectorAll('#editProfileModal, #changePasswordModal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                }
+            });
+        });
+
+        // Close modals with escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('#editProfileModal, #changePasswordModal').forEach(modal => {
+                    modal.classList.add('hidden');
+                });
+            }
+        });
     </script>
 </body>
+
 </html>
