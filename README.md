@@ -1,40 +1,148 @@
+# 🎓 Program Scraping Berita Radar Surabaya
 
-# Project UperFood
+Program web scraping untuk mengumpulkan data berita dari website [Radar Surabaya](https://radarsurabaya.jawapos.com/) dengan fitur pencarian berdasarkan keyword.
 
-Project UperFood merupakan project pemrograman web & appl yang dikembangkan oleh kelompok 6 untuk memenuhi syarat kelulusan mata kuliah ini.
+## 👨‍🏫 Tentang Developer
 
+- **Dibuat oleh:** Dosen Data Mining & Full Stack Engineer
+- **Pengalaman:** 30 tahun dalam data mining dan web scraping
+- **Sertifikasi:** Internasional dalam web scraping dan data extraction
+- **Tujuan:** Untuk keperluan riset dan analisis data berita
 
-## Installation
+## 🚀 Fitur Utama
 
-1. Pull project lalu lakukan composer download
+- ✅ **Pencarian Berita:** Mencari berita berdasarkan keyword yang diinput user
+- ✅ **Ekstraksi Data Lengkap:** Mengambil judul, tanggal, link, dan konten berita
+- ✅ **Validasi Relevansi:** Memastikan artikel yang diambil relevan dengan keyword
+- ✅ **Pembersihan Data:** Membersihkan dan memperbaiki data sebelum disimpan
+- ✅ **Export CSV:** Menyimpan hasil dalam format CSV yang kompatibel dengan Excel
+- ✅ **Penanganan Error:** Robust error handling untuk berbagai kondisi
+- ✅ **Rate Limiting:** Delay otomatis untuk menghindari blocking
 
-```bash
-  git pull [url repo ini]
-  composer install
+## 📋 Persyaratan Sistem
+
+- Python 3.7 atau lebih baru
+- Koneksi internet yang stabil
+- Google Colab (direkomendasikan) atau environment Python lokal
+
+## 🔧 Instalasi
+
+### Untuk Google Colab:
+
+1. Upload file `scraping_radar_surabaya.py` ke Google Colab
+2. Install dependencies:
+```python
+!pip install requests beautifulsoup4 pandas lxml urllib3
 ```
-2. lalu pastikan kalian memiliki laragon di device tersebut.
-3. diperlukan juga API dari midtrans karna project ini sudah di konfigurasi dengan API midtrans yang nantinya pembayaran benar benar bisa menggunakan Gopay, Ovo, Credit Card, VA Bank, dll.
-4. setelah memiliki API midtrans, lakukan composer install midtrans pada project ini karna nantinya harus mengambil beberapa sumber dari midtrans.
+
+### Untuk Environment Lokal:
+
+1. Clone atau download repository ini
+2. Install dependencies:
 ```bash
-composer midtrans install (cek kembali di web midtrans)
+pip install -r requirements.txt
 ```
-5. terakhir pastikan juga untuk melakukan npm run dev karna project ini menggunakan tailwindcss
-6. terakhir tinggal jalankan project ini dari laragon atau dari terminal vscode
-    
-## Authors
 
-- [@barunapasha](https://www.github.com/barunapasha)
-- [@nurhumam](https://www.github.com/nurhumam)
+## 🎯 Cara Penggunaan
 
+### 1. Menjalankan Program
 
+```python
+# Jalankan program
+python scraping_radar_surabaya.py
+```
 
-## FAQ
+### 2. Input yang Diperlukan
 
-#### Apakah project ini sudah ada akun admin?
+Program akan meminta input:
+- **Keyword pencarian:** Kata kunci berita yang ingin dicari (contoh: "harga jagung")
+- **Jumlah artikel:** Maksimal artikel yang akan diambil (default: 5, maksimal: 500)
 
-Ya, gunakan admin@uperfood.com | admin123 sebagai email & password untuk mengakses halaman admin
+### 3. Output
 
-#### Apakah project ini sudah terintegrasi dengan database?
+Program akan menghasilkan:
+- **File CSV:** `berita_radar_surabaya_[keyword]_[timestamp].csv`
+- **Preview data:** Tampilan preview hasil scraping di console
+- **Statistik:** Informasi jumlah artikel yang berhasil diambil
 
-Ya, anda bisa mengganti database project ini dengan database milik anda sendiri di env
+## 📊 Struktur Data Output
+
+File CSV akan berisi kolom:
+- `judul_berita`: Judul artikel berita
+- `link_berita`: URL lengkap artikel
+- `tanggal_rilis`: Tanggal publikasi artikel
+- `detail_konten`: Isi lengkap artikel (tanpa iklan)
+
+## 🔍 Cara Kerja Program
+
+### 1. Pencarian Berita
+- Mengakses URL: `https://radarsurabaya.jawapos.com/search?q=[keyword]`
+- Menggunakan selector XPath yang telah dioptimasi
+- Mendukung pagination untuk mengambil lebih banyak artikel
+
+### 2. Ekstraksi Data
+- **Judul:** Menggunakan multiple selector untuk memastikan akurasi
+- **Tanggal:** Mencari dalam berbagai format tanggal Indonesia
+- **Konten:** Mengambil konten artikel dengan filter iklan dan elemen tidak diinginkan
+
+### 3. Validasi dan Pembersihan
+- Memvalidasi relevansi artikel berdasarkan keyword
+- Membersihkan data dari karakter tidak diinginkan
+- Memperbaiki struktur data yang salah
+
+## 🛡️ Fitur Keamanan
+
+- **User-Agent Rotation:** Menggunakan browser headers yang realistis
+- **Rate Limiting:** Delay otomatis antara request
+- **Error Handling:** Penanganan error yang robust
+- **SSL Verification:** Disabled untuk kompatibilitas Colab
+
+## 📝 Contoh Penggunaan
+
+```python
+# Contoh input
+Keyword: harga jagung
+Jumlah artikel: 10
+
+# Output yang diharapkan
+✅ Berhasil mengumpulkan 15 link artikel kandidat
+✅ Artikel relevan ditemukan (10/10)
+💾 Data disimpan ke: berita_radar_surabaya_harga_jagung_20241201_143022.csv
+```
+
+## ⚠️ Penting untuk Diperhatikan
+
+1. **Etika Penggunaan:** Gunakan data dengan bijak dan sesuai etika riset
+2. **Rate Limiting:** Program sudah dioptimasi untuk tidak membebani server
+3. **Koneksi Internet:** Pastikan koneksi stabil untuk hasil optimal
+4. **Keyword Spesifik:** Gunakan keyword yang spesifik untuk hasil yang lebih relevan
+
+## 🔧 Troubleshooting
+
+### Masalah Umum:
+
+1. **"Tidak menemukan link artikel"**
+   - Pastikan keyword yang dimasukkan relevan
+   - Coba keyword yang lebih spesifik
+
+2. **"Error saat mengakses URL"**
+   - Periksa koneksi internet
+   - Coba jalankan ulang program
+
+3. **"Artikel tidak relevan"**
+   - Gunakan keyword yang lebih spesifik
+   - Program hanya mengambil artikel yang benar-benar mengandung keyword
+
+## 📞 Support
+
+Untuk pertanyaan atau masalah teknis, silakan hubungi developer.
+
+## 📄 Lisensi
+
+Program ini dibuat untuk keperluan riset dan pendidikan. Gunakan dengan bertanggung jawab.
+
+---
+
+**🎓 Dibuat dengan pengalaman 30 tahun dalam data mining dan web scraping**
+**🏆 Sertifikasi internasional dalam web scraping dan data extraction**
 
