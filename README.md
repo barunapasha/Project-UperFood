@@ -1,40 +1,158 @@
+# Radar Surabaya Web Scraper
 
-# Project UperFood
+## Deskripsi
+Aplikasi web scraping profesional untuk website Radar Surabaya (https://radarsurabaya.jawapos.com/) yang dikembangkan oleh Data Mining Expert & Full Stack Engineer dengan pengalaman 30 tahun dan sertifikasi internasional web scraping.
 
-Project UperFood merupakan project pemrograman web & appl yang dikembangkan oleh kelompok 6 untuk memenuhi syarat kelulusan mata kuliah ini.
+## Fitur Utama
+- ✅ Pencarian artikel berdasarkan kata kunci
+- ✅ Ekstraksi judul berita dan tanggal publikasi
+- ✅ Ekstraksi konten detail artikel (tanpa iklan)
+- ✅ Export data ke format CSV dan JSON
+- ✅ Logging lengkap untuk monitoring
+- ✅ Error handling yang robust
+- ✅ Rate limiting untuk menghormati server
+- ✅ User-Agent yang profesional
 
+## Instalasi
 
-## Installation
-
-1. Pull project lalu lakukan composer download
-
+### 1. Clone Repository
 ```bash
-  git pull [url repo ini]
-  composer install
+git clone <repository-url>
+cd radar-scraper
 ```
-2. lalu pastikan kalian memiliki laragon di device tersebut.
-3. diperlukan juga API dari midtrans karna project ini sudah di konfigurasi dengan API midtrans yang nantinya pembayaran benar benar bisa menggunakan Gopay, Ovo, Credit Card, VA Bank, dll.
-4. setelah memiliki API midtrans, lakukan composer install midtrans pada project ini karna nantinya harus mengambil beberapa sumber dari midtrans.
+
+### 2. Install Dependencies
 ```bash
-composer midtrans install (cek kembali di web midtrans)
+pip install -r requirements.txt
 ```
-5. terakhir pastikan juga untuk melakukan npm run dev karna project ini menggunakan tailwindcss
-6. terakhir tinggal jalankan project ini dari laragon atau dari terminal vscode
-    
-## Authors
 
-- [@barunapasha](https://www.github.com/barunapasha)
-- [@nurhumam](https://www.github.com/nurhumam)
+### 3. Jalankan Aplikasi
+```bash
+python radar_scraper.py
+```
 
+## Cara Penggunaan
 
+### 1. Menjalankan Scraper
+```bash
+python radar_scraper.py
+```
 
-## FAQ
+### 2. Input Kata Kunci
+Ketika aplikasi berjalan, Anda akan diminta memasukkan kata kunci pencarian:
+```
+Masukkan kata kunci pencarian (contoh: harga jagung): 
+```
 
-#### Apakah project ini sudah ada akun admin?
+### 3. Proses Scraping
+Aplikasi akan:
+1. Mengunjungi https://radarsurabaya.jawapos.com/
+2. Melakukan pencarian dengan kata kunci yang dimasukkan
+3. Mengekstrak link artikel dari hasil pencarian
+4. Mengakses setiap artikel untuk mengambil konten detail
+5. Menyimpan data dalam format CSV dan JSON
 
-Ya, gunakan admin@uperfood.com | admin123 sebagai email & password untuk mengakses halaman admin
+### 4. Output Files
+Setelah selesai, aplikasi akan menghasilkan:
+- `radar_surabaya_articles_YYYYMMDD_HHMMSS.csv` - Data dalam format CSV
+- `radar_surabaya_articles_YYYYMMDD_HHMMSS.json` - Data dalam format JSON
+- `radar_scraper.log` - Log file untuk monitoring
 
-#### Apakah project ini sudah terintegrasi dengan database?
+## Struktur Data Output
 
-Ya, anda bisa mengganti database project ini dengan database milik anda sendiri di env
+### CSV/JSON Format
+```json
+{
+  "title": "Judul Artikel",
+  "date": "Tanggal Publikasi",
+  "content": "Konten lengkap artikel (tanpa iklan)",
+  "url": "URL artikel",
+  "scraped_at": "Timestamp scraping"
+}
+```
+
+## Selector XPath yang Digunakan
+
+### 1. Form Pencarian
+```
+/html/body/header/div[2]/div/div[3]/form
+```
+
+### 2. Link Artikel
+```
+/html/body/div[3]/div/div/div[2]/section/div[3]/div[1]/div[2]/h2/a
+```
+
+### 3. Tanggal Artikel
+```
+/html/body/div[3]/div/div/div[2]/section/div[3]/div[1]/div[2]/date
+```
+
+### 4. Konten Artikel
+```
+/html/body/div[3]/div/div/div[2]/div/div[1]/article
+```
+
+## Fitur Keamanan & Etika
+
+### 1. Rate Limiting
+- Delay 2 detik antara setiap request artikel
+- Menghormati server target
+
+### 2. User-Agent Professional
+- Menggunakan User-Agent browser yang valid
+- Menghindari deteksi sebagai bot
+
+### 3. Error Handling
+- Timeout handling (30 detik)
+- Graceful error recovery
+- Logging lengkap untuk debugging
+
+### 4. Content Filtering
+- Menghilangkan iklan dan elemen non-konten
+- Fokus hanya pada konten artikel
+
+## Troubleshooting
+
+### 1. Jika Tidak Ada Artikel Ditemukan
+- Coba kata kunci yang berbeda
+- Periksa koneksi internet
+- Cek log file untuk error details
+
+### 2. Jika Ada Error Network
+- Periksa koneksi internet
+- Coba jalankan ulang aplikasi
+- Periksa apakah website target bisa diakses
+
+### 3. Jika Ada Error Parsing
+- Website mungkin telah berubah struktur
+- Periksa log file untuk detail error
+- Update selector jika diperlukan
+
+## Logging
+
+Aplikasi menggunakan logging yang komprehensif:
+- File log: `radar_scraper.log`
+- Console output untuk monitoring real-time
+- Level: INFO, WARNING, ERROR
+
+## Dependencies
+
+- `requests` - HTTP requests
+- `beautifulsoup4` - HTML parsing
+- `pandas` - Data manipulation dan export
+- `lxml` - XML/HTML parser
+- `urllib3` - HTTP client
+
+## Lisensi
+
+Aplikasi ini dikembangkan untuk tujuan edukasi dan penelitian. Pastikan untuk mematuhi Terms of Service website target.
+
+## Kontak
+
+Dikembangkan oleh Data Mining Expert & Full Stack Engineer dengan pengalaman 30 tahun dan sertifikasi internasional web scraping.
+
+---
+
+**Catatan**: Aplikasi ini dirancang dengan standar profesional dan mengikuti best practices dalam web scraping. Gunakan dengan bertanggung jawab dan hormati Terms of Service website target.
 
